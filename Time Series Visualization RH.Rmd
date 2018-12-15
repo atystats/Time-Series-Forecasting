@@ -1,0 +1,703 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+Time Series Forecasting :-
+A time series is a list of numbers along with the information about at what time the information was recorded.
+
+```{r}
+# defining a time series with frequency 1
+y = ts(c(123,74,88,34), start = 2012)
+y
+```
+
+Frequency :- number of observations before the seasonal pattern repeats.
+```{r}
+# defining a time series with frequency more than 1
+y = ts(runif(36,50,100), start = 2012, frequency = 12)
+# Frequency = 12 -> Monthly data
+# Frequency = 4 -> Quarterly data
+# Frequency = 52 -> Weekly data
+# Frequency = 1 -> Annual data
+y
+```
+
+####################################################################################################
+
+Time Plots :- For time series data, most useful graph to start with is a time plot.
+We will now look at a plot from Weekly Economy passenger load on Ansett Airlines "melsyd"
+
+autoplot command helps in plotting time series data from Economy class variable.
+```{r}
+autoplot(melsyd[,"Economy.Class"]) +
+  ggtitle("Economy class passanger: Melbourne - Sydney") +
+  xlab("Year") + 
+  ylab("Thousands")
+```
+
+Lernings :-
+1. There was a period in 1989 when no passanger was carried.
+2. There was a period in 1992 when the load was low.
+3. There was a increase in load in 2nd half of 1991.
+4. There is a dip in load at the start of each year.
+5. There is a long term fluctuation in level of the series which increases in 1987, decrease in 1989 and then increase in 1991.
+
+Now let's look at a simpler time series
+Monthly Scripts of pharmaceutical products
+
+```{r}
+autoplot(a10) +
+  ggtitle("Antidiabetic drug sale") +
+  ylab("$ million") +
+  xlab("Year")
+```
+
+Learning:-
+1. There is an increasing trend.
+2. Seasonal patterns that increase in size as the level increases.
+
+Time Series Patterns :-
+1. Trend :- Trend are the long term increase or decrease in the data. Trend might also change direction within the time series which means it goes from increasing trend to decreasing trend.
+2. Seasonal :- A seasonal pattern occurs when a time series is affected by seasonal factors i.e. time of the year, day of the week. Seasonality has a fixed and known frequency.
+3. Cyclic :- A cycle occurs when the data exhibits rises and fall that are not of a fixed frequency.
+
+The length of cycles are more than length of seasons usually and the magnitude of cycles tend to be more variable than magnitude of seasonal patterns.
+
+```{r}
+par(mfrow = c(2,2))
+plot(elec, xlab = "year", ylab = "Australian Monthly electricity production")
+
+plot(ustreas, xlab = "time", ylab = "US treasury bill contracts")
+
+plot(hsales, xlab = "year", ylab = "Monthly Housing Sales (millions)")
+
+plot(elecequip, xlab = "year", ylab = "Monthly Electrical Equipment Production")
+```
+
+Observations :-
+1. Electricity production data has strong increasing trend and a seasonal pattern with annual frequency that increase with the level.
+2. US treasury bill data has strong decreasing trend.
+3. Monthly household sales data shows no trend but seasonality within each year. Also, a cyclic pattern is visible that last for 6-10 years.
+4. Monthly household sales data shows no trend but seasonality within each year. Also, a cyclic pattern is visible that last for 6-8 years.
+
+####################################################################################################
+Seasonal Plots
+####################################################################################################
+
+Seasonal Plots are similar to time plots except that the data are plotted against the individual seasons.
+
+Seasonal plots for the antidiabetic drugs sales
+```{r}
+ggseasonplot(a10, year.labels = TRUE, year.labels.left = TRUE) + 
+  ggtitle("Seasonal plot: antidiabetic drug sales") + 
+  ylab("$ million")
+```
+
+Seasonal plots helps in looking at seasonality more clearly, and is useful in identifying the years in which pattern has changed.
+
+Learning from above plot:-
+1. A big jump in sales in month of January.
+2. March 2008 sales has negative slope opposite of other years.
+3. Sales pattern in month of april is not consistent.
+
+We can also use polar coordinates for the above plot
+```{r}
+ggseasonplot(a10, polar = TRUE) +
+  ggtitle("Seasonal plot: antidiabetic drug sales") + 
+  ylab("$ million")
+```
+
+####################################################################################################
+Seasonal Subseries Plots
+####################################################################################################
+These charts represents data for each season in seperate mini time plots.
+
+```{r}
+ggsubseriesplot(a10) + 
+  ylab("$ million") +
+  ggtitle("Seasonal Subseries plot: Antidiabetic Drug Sales")
+```
+
+The horizontal lines represents the average for each month.
+This plot can pe used in identifying changes within a season.
+
+####################################################################################################
+Scatter Plots
+####################################################################################################
+Timeplots can be used to study relationships between time series.
+
+```{r}
+autoplot(elecdemand[,c("Demand","Temperature")],facets = TRUE) +
+                      xlab("Year : 2014") + ylab("") +
+                      ggtitle("Half-hourly electricity demand: Victoria, Australia")
+```
+
+We can study the relationship between demand and temperature by plotting one series against the other.
+```{r}
+qplot(Temperature, Demand, data = as.data.frame(elecdemand)) + 
+  xlab("Temperature (Celsius)") + ylab("Demand (GW)")
+```
+
+It can be seen that demand is high when temprature is either very high or very low.
+
+####################################################################################################
+Correlation
+####################################################################################################
+Correlation coefficient measure the strength of linear relationship between 2 variables. It lies between -1 to 1.
+A negative value indicated a negative relationship and a positive value indicates a positive relationship.
+
+```{r}
+cor(elecdemand[,c("Demand","Temperature")])
+```
+
+The above matrix shows that correlation between demand and temperature is 0.23(low correlation) but the scatter plot above showed that there is a strong non linear correlation between demand and temprature. As it is non linear, it cannot be measured by correlation coefficient.
+
+Quarterly visitor numbers for five regions of New South Wales, Australia
+```{r}
+autoplot(visnights[,1:5], facets = TRUE) +
+  ylab("Number of visitors nights each quarter (millions)")
+```
+
+Quarterly visitor numbers for five regions of New South Wales, Australia
+
+We can plot these 5 time series, we can plot time series against each other. These plots can be arranged in a scatterplot matrix.
+```{r}
+GGally::ggpairs(as.data.frame(visnights[,1:5]))
+```
+
+Observations from above plot:-
+1. Strong correlation between visitors of NSW south coast and north coast.
+2. Strong correlation between visitors of NSW south coast and metropolitan.
+3. Strong correlation between visitors of NSW north coast and metropolitan.
+
+####################################################################################################
+Lagplots
+####################################################################################################
+
+Lagplots shows y(t) plotted against y(t-k) for different values of k.
+```{r}
+beer2 = window(ausbeer, start = 1992)
+gglagplot(beer2)
+```
+
+1. A strong positive correlation in lag 4 and 8 because we are plotting each quarter with same quarter last year. This indicates the presence of seasonality in the data.
+2. The negative relationship seen for lags 2 and 6 occurs because peaks (in Q4) are plotted against troughs (in Q2).
+
+####################################################################################################
+Autocorrelation
+####################################################################################################
+Autocorrelation measures the linear relationship between the lagged values of a time series.
+
+Autocorrelation is calculated as :-
+
+$$r_k = \frac{ \sum_{t=k+1}^T (y_t - mean(y))(y_{t-k} - mean(y))}{\sum_{t=1}^T(y_t - mean(y))^2}$$
+
+Autocorrelation for 9 lags corresponding to nine scatterplots above are :-
+
+```{r}
+acf(beer2, lag.max = 9,plot = FALSE)
+```
+
+The plot for autocorrelation is also called correlogram.
+```{r}
+ggAcf(beer2)
+```
+The dashed blue indicates where the correlation is significantly different from zero.
+
+Observation :-
+1. r4 is highest than other lags. This is due to the seasonal pattern in the data. Peaks and troughs are 4 quater apart.
+2. r2 is more negative than all the other lags because troughs tend to be 2 quarters behind peaks.
+
+When the data is seasonal, the autocorrelation at seasonal lags (and at multiple of seasonal frequency) will be larger than other lags.
+Also, the data with trend will show stronger autocorrelation in nearby time lags and will decrease with time because values nearby in time also nearby in size.
+When data have both, we will see a combinaion of both.
+
+Let's look at a dataset that has both trend and seasonality, Monthly Australian Electricity Demand 
+```{r}
+aelec = window(elec, start = 1980)
+autoplot(aelec) + xlab("Year") + ylab("GWh") + ggtitle("Monthly Australian Electricity Demand")
+```
+
+```{r}
+ggAcf(aelec, lag = 48)
+```
+
+The slow decrease in the ACF as the lags increase is due to the trend, while the “scalloped” shape is due the seasonality.
+
+White Noise :- The time series that shows no autocorrelation are called white noise. 
+
+An example of white noise
+```{r}
+set.seed(30)
+y = ts(rnorm(50))
+autoplot(y) + ggtitle("White noise")
+```
+
+```{r}
+ggAcf(y)
+```
+
+In white noise, we expect autocorrelation to be close to zero. In the above graph, we can see that all the values are below blue dashed lines.
+
+95% of the spikes in ACF should lie within $\pm 2 \sqrt{T}$ where T is the length of the time. If we have more than 5% spikes outside this range than the time series might not be a white noise.
+
+#######################################################################################################################
+############################################## Excercises #############################################################
+#######################################################################################################################
+
+Using help function we will look at following 3 datasets:-
+1. gold :- daily morning gold prices in US dollars.
+2. woolyrnq :- Quarterly production of woollen yarn in Australia: tonnes.
+3. gas :- Australian monthly gas production.
+
+Now we will explore each dataset seperately.
+```{r}
+autoplot(gold) +
+  ggtitle("Daily Morning gold prices in US dollars") +
+  xlab("Day") +
+  ylab("Prices in $")
+```
+
+Observations:-
+1. There are some missing observations in the data.
+2. No strong evidence of seasonality.
+3. There seems to be a increasing trend but in the later year it is downward. This is probably because we are looking at a part of a cyclic variation.
+4. One outlier in the data.
+
+we will find out the frequency of the dataset using frequency function and the outlier in the data.
+```{r}
+frequency(gold)
+which.max(gold)
+```
+Frequecy is 1 as the data is on daily level.
+And the outlier is on 770th day from 1st Jan 1985.
+
+```{r}
+autoplot(woolyrnq) + 
+  ggtitle("Quarterly production of woollen yarn in Australia") +
+  xlab("Quarter") +
+  ylab("production in tonnes")
+```
+
+Observation :-
+1. There is a downward trend in the data.
+2. Cyclic pattern can be seen last for around 5 years.
+3. Presence of seasonlity in the later years on the data.
+
+we will find out the frequency of the dataset using frequency function
+```{r}
+frequency(woolyrnq)
+```
+Frequency is 4 as the data is on quarterly level.
+
+```{r}
+autoplot(gas) +
+  ggtitle("Australian monthly gas production") +
+  xlab("Month") +
+  ylab("Production")
+```
+
+Observation :-
+1. Annual seasonality present in the data that increase in size as the level increases.
+2. Increasing trend in the data.
+3. No cyclic variation.
+
+```{r}
+frequency(gas)
+```
+Frequency is 12 as the data is on monthly level.
+
+Now we will exploring a sales dataset from a small company over the period of 1981-2005.
+
+```{r}
+tute1 = read.csv("/Users/ankittyagi/Documents/Time_series_data/tute1 .csv", header = TRUE)
+head(tute1)
+```
+
+Data description :- 
+1. Sales :- Quarterly sales for a small company over the period 1981-2005.
+2. AdBudget :- Advertising budget.
+3. GDP :- Gross domestic product.
+
+Now we will the data to a time series data and visualize it.
+```{r}
+mytimeseries = ts(tute1[,-1], start = 1981, frequency = 4)
+autoplot(mytimeseries, facets = TRUE)
+```
+
+We can see that Sales and AdBudget seems to follow the same pattern over the year.
+
+Now we will look at another dataset that represent retail sales in various categories for different Australian states.
+```{r}
+retaildata = readxl::read_excel("/Users/ankittyagi/Documents/Time_series_data/retail.xlsx",skip =1)
+# skip = 1 is used because the data has 2 headers.
+str(retaildata)
+```
+
+Now we will explore anyone category in the data.
+```{r}
+myts = ts(retaildata[,"A3349873A"], start = c(1984,4), frequency = 12)
+autoplot(myts)
+```
+
+observations :- 
+1. There is an increasing trend in the data.
+2. Annual seasonality is present in the data that increases in size as the level increases.
+3. Cyclic variation is also present that last for 5-6 years.
+
+Let's analyse the seasonality more closely.
+```{r}
+ggseasonplot(myts, year.labels = TRUE, year.labels.left = TRUE)
+```
+
+1. The peaks that we have seen in timeplot are from month November and December.
+2. The slope of increase from oct to nov is much higher in the later years.
+3. An unusal month of June in year 2004.
+
+```{r}
+ggseasonplot(myts, year.labels = TRUE, year.labels.left = TRUE, polar = TRUE)
+```
+
+```{r}
+ggsubseriesplot(myts)
+```
+
+```{r}
+gglagplot(myts)
+```
+
+A strong positive correlation in lag12 because we are plotting same time last year.
+```{r}
+ggAcf(myts,lag.max = 36)
+```
+
+Observation :-
+1. Autocorrelation at lag12 and multiple of 12 are higher than other lags that is happening because of seasonality in the data.
+2. Also the peaks are getting smaller because of the presence of trend.
+3. The "scalloped shape" is because of the seasonality in the data.
+
+Now we will plot some time series.
+```{r}
+autoplot(bicoal) +
+  ggtitle("Annual bituminous coal production") +
+  xlab("Year")
+
+autoplot(chicken) +
+  ggtitle("Price of chicken in US") +
+  xlab("Year") +
+  ylab("Price (in $)")
+
+autoplot(dole) +
+  ggtitle("No. of people on unemployment benefits in Australia") +
+  xlab("Month") +
+  ylab("Population")
+
+autoplot(usdeaths) +
+  ggtitle("Monthly accidental deaths in USA") +
+  xlab("Month") +
+  ylab("No. of Deaths")
+
+autoplot(lynx) +
+  ggtitle("Annual lynx trapping in Canada") +
+  xlab("Year") +
+  ylab("No. of lynx")
+```
+
+```{r}
+autoplot(goog) +
+  ggtitle("Closing stock prices of Google Inc") +
+  xlab("Daily") +
+  ylab("Prices/Unit")
+
+autoplot(writing) +
+  ggtitle("Industry Sales for printing and writing paper") +
+  xlab("Monthly") +
+  ylab("Sales (in francs)")
+
+autoplot(fancy) +
+  ggtitle("Monthly sales for a souvenir shop") +
+  xlab("Month") +
+  ylab("Sale Units")
+
+autoplot(a10) +
+  ggtitle("Total monthly scripts for pharmaceutical products under ATC a10") +
+  xlab("Month") +
+  ylab("No. of scripts")
+
+autoplot(h02) +
+  ggtitle("Total monthly scripts for pharmaceutical products under ATC h02") +
+  xlab("Month") +
+  ylab("No. of scripts")
+```
+
+Now we will explore the seasonal pattern in some of the datasets.
+```{r}
+ggseasonplot(writing, year.labels = TRUE, year.labels.left = TRUE) + ggtitle("Industry Sales for printing and writing paper")
+ggsubseriesplot(writing) + ggtitle("Industry Sales for printing and writing paper")
+```
+
+1. There is a strong seasonal patterns present in the data. 
+2. Year 1970 has an opposite pattern in the month of May and June and also in december.
+3. There is no spike in month of march in year 1977.
+4. Subseasonal plots shows that most of the months had a dip except Sep, Apr and Feb.
+
+```{r}
+ggseasonplot(fancy, year.labels = TRUE, year.labels.left = TRUE) + ggtitle("Monthly sales for a souvenir shop")
+ggsubseriesplot(fancy) + ggtitle("Monthly sales for a souvenir shop")
+```
+
+1. There is a strong seasonal pattern exist but there is unusual year.
+2. Month of March and dec had a dip sales in a year. Other month also had a break in slope of increase in one year.
+3. The increase in the level in the month of december is considerably higher than other month.
+
+```{r}
+ggseasonplot(a10, year.labels = TRUE, year.labels.left = TRUE) + ggtitle("Total monthly scripts for pharmaceutical products under ATC a10")
+ggsubseriesplot(a10) + ggtitle("Total monthly scripts for pharmaceutical products under ATC a10")
+```
+
+1. Month of April do not have a consistent seasonal pattern. Some year show a dip and some shows an increase.
+2. 2006 shows significant dip in september than other years. Also, year 2002 to 2004 shows increase rather than decrease in september.
+3. Some months shows a dip in numbers in a couple of years.
+
+```{r}
+ggseasonplot(h02, year.labels = TRUE, year.labels.left = TRUE) + ggtitle("Total monthly scripts for pharmaceutical products under ATC h02")
+ggsubseriesplot(h02) + ggtitle("Total monthly scripts for pharmaceutical products under ATC h02")
+```
+
+1. Year 2000 and 2006 shows a dip in month of september rather than an increase.
+2. Year 2005 shows a dip in month of october while other show an increase.
+3. Year 200 shows a dip in month of November while other shows a decrease.
+4. Although there is a increasing trend overall but the slope is decreasing in the later years.
+5. The bills in jan did not increase as much as for the other years.
+
+Now lets explore some other datasets
+```{r}
+autoplot(hsales) +
+  ggtitle("Monthly sales of new one-family houses sold in the USA") +
+  xlab("Year") +
+  ylab("sales(in millions)")
+
+ggseasonplot(hsales, year.labels = TRUE, year.labels.left = TRUE) +
+  ggtitle("Monthly sales of new one-family houses sold in the USA")
+
+ggsubseriesplot(hsales) + 
+  ggtitle("Monthly sales of new one-family houses sold in the USA")
+
+gglagplot(hsales, lags = 24)
+
+ggAcf(hsales, lag.max = 84)
+```
+
+Observations :-
+1. Timeplot shows that there is no trend present in the data.
+2. Seasonal pattern present in the data but a closer look at subseries plot will give us a clear picture.
+3. Cyclic variation is present in the data that last from 7-9 years.
+4. Year 1980, 1982 and 1986 shows a significant different pattern than other years in most of the seasons.
+5. Year 1991 also some opposite patterns in some of the month.
+6. Subseries shows that in intial years if sales is high current year than it will go down next year for almost years. However the amount of decrease or increase changes decrease with time.
+7. The ACF represents the 6 point. We have peak at lag 12. The scalloped shape in the 1st year shows the presence of seasonality. But the after that we see more negative correlation that represents the drops sales in after every alternative year.
+
+```{r}
+autoplot(usdeaths) +
+  ggtitle("Monthly accidental deaths in USA") +
+  xlab("Year") +
+  ylab("No. of Deaths")
+
+ggseasonplot(usdeaths, year.labels = TRUE, year.labels.left = TRUE) +
+  ggtitle("Monthly accidental deaths in USA")
+
+ggsubseriesplot(usdeaths) + 
+  ggtitle("Monthly accidental deaths in USA")
+
+gglagplot(usdeaths, lags = 24)
+
+ggAcf(usdeaths, lag.max = 24)
+```
+
+1. No trend can be seen in the timeplot.
+2. Seasonal patterns are present in the data with annual frequency but is not very consistent in the later months. No cyclic variation.
+3. Seasonal plot shows that oct-dec have a different pattern after 1975.
+4. Year 1975 shows a different pattern in April than other years.
+5. Subseries plot shows that all the months shows a decrease in deaths with time intiallly and again pick in the later years.In some months there is another peak in between.
+6. We have peaks at 12 months lag because of sesonality. Also, The correlation is first few months and then negative for some months and then positive again. This is mostly happening because the deaths starts decreasing in the middle of the month and then by end of the year they come at the same level as the start.
+
+```{r}
+autoplot(bricksq) +
+  ggtitle("Quarterly Brick Production in Australia") +
+  xlab("Quarter") +
+  ylab("Production")
+
+ggseasonplot(bricksq, year.labels = TRUE, year.labels.left = TRUE) +
+  ggtitle("Quarterly Brick Production in Australia")
+
+ggsubseriesplot(bricksq) + 
+  ggtitle("Quarterly Brick Production in Australia")
+
+gglagplot(bricksq, lags = 24)
+
+ggAcf(bricksq, lag.max = 24)
+```
+
+1. There is a increasing in the data. Also seems to have a seasonal pattern as well.
+2. There is an anomaly in year 1982 and 1975.
+3. There is an increasing trend till year 1975 and then there doesn't seems to have a trend. 
+4. ACF plots shows that there is weak seasonal patterns exist in the data. 
+5. Peaks are at 4 lags and multiple of it. All the positive is an indication of increasing trend only.
+
+```{r}
+autoplot(sunspotarea) +
+  ggtitle("Annual Average sunspot area") +
+  xlab("year")
+
+gglagplot(sunspotarea, lags = 24)
+
+ggAcf(sunspotarea, lag.max = 24)
+```
+
+1. There is no trend present in the data but level has increased with time and then decreased again.
+2. There is a trens that no of sunspots come down to 0 after 2-4 years.
+3. ACF plots shows that correlation decreasing first and then increasing again and then repeats again. This is happening because after 4-5 years similar patterns starts repeating itself.
+
+```{r}
+autoplot(gasoline) +
+  ggtitle("Gasoline product supply") +
+  xlab("Week") +
+  ylab("Million barrels per day")
+
+ggseasonplot(gasoline, year.labels = TRUE, year.labels.left = TRUE) +
+  ggtitle("Gasoline product supply")
+
+
+ggAcf(gasoline, lag.max = 72)
+```
+
+1. Increasing trend present in the data. Also there seems to be a cyclic pattern as well that last 10 to 12 years. More data is needed to identify it.
+2. Seasonal plots shows that there is a sonality present as well.
+3. ACF plots also shows there is a annual seasonality present in the data.
+
+
+Now we will look at International arrivals datasets from 4 countries.
+```{r}
+autoplot(arrivals[,c("Japan")]) +
+  ggtitle("Quarterly international arrivals for Japan") +
+  ylab("arrivals")
+  
+autoplot(arrivals[,c("NZ")]) +
+  ggtitle("Quarterly international arrivals for NZ") +
+  ylab("arrivals")
+
+autoplot(arrivals[,c("UK")]) +
+  ggtitle("Quarterly international arrivals for UK") +
+  ylab("arrivals")
+
+autoplot(arrivals[,c("US")]) +
+  ggtitle("Quarterly international arrivals for US") +
+  ylab("arrivals")
+```
+
+Japan :-
+1. An increasing trend at first and then a decreasing trend which could be a part of a cyclic variation.
+
+NZ :-
+1. An increasing trend is present.
+2. A sesonal pattern is also present that increase with time.
+
+UK :-
+1. An increasing trend is present.
+2. A sesonal pattern is also present that increase with time.
+
+US :-
+1. An increasing trend is present with cyclic variation that last for about 12-15 years.
+2. A sesonal pattern.
+
+```{r}
+ggseasonplot(arrivals[,c("Japan")], year.labels = TRUE, year.labels.left = TRUE) +
+  ggtitle("International Arrivals in Japan")
+
+ggseasonplot(arrivals[,c("NZ")], year.labels = TRUE, year.labels.left = TRUE) +
+  ggtitle("International Arrivals in NZ")
+
+ggseasonplot(arrivals[,c("US")], year.labels = TRUE, year.labels.left = TRUE) +
+  ggtitle("International Arrivals in US")
+
+ggseasonplot(arrivals[,c("UK")], year.labels = TRUE, year.labels.left = TRUE) +
+  ggtitle("International Arrivals in UK")
+```
+
+Japan :-
+1. Seasonal pattern for Q3 is opposite for year till 1988 and 1989-.
+2. Also the slope of increase and decrease are more sharp in later years.
+3. There are some years that have a different trend in year Quarter 4 as well.
+
+NZ :-
+1. Year 2003, 2011 shows an opposite trend in last quarter.
+
+US :-
+1. Year 2000, 2009, 1988, 1991, 2010 have a different pattern in 3rd quarter.
+2. Year 1990, 1983, 2001, 2000 have an opposite trend in 4th quarter.
+
+UK :-
+1. Quarter 2-3 have opposite trend in some years.
+
+```{r}
+ggsubseriesplot(arrivals[,c("Japan")]) +
+  ggtitle("International Arrivals in Japan") +
+  ylab("arrivals")
+
+ggsubseriesplot(arrivals[,c("NZ")]) +
+  ggtitle("International Arrivals in NZ") +
+  ylab("arrivals")
+
+ggsubseriesplot(arrivals[,c("US")]) +
+  ggtitle("International Arrivals in US") +
+  ylab("arrivals")
+
+ggsubseriesplot(arrivals[,c("UK")]) +
+  ggtitle("International Arrivals in UK") +
+  ylab("arrivals")
+```
+
+Japan :-
+1. An increasing trend at first and then a decreasing trend which could be a part of a cyclic variation in all months.
+2. There is a dip in one year expecially in quarter 2 and 4.
+
+NZ :-
+NZ do not see any significantly unusual pattern.
+
+US :-
+Q3 seems to have 2 peaks in initial years that are not in other quarters.
+
+UK :-
+All years have similar pattern but the increasing trend in middle quarter is much smaller than other 2 quarters.
+
+Monthly total number of pigs slaughtered in Victoria, Australia dataset
+```{r}
+mypigs = window(pigs, start = 1990)
+
+autoplot(mypigs) +
+  ggtitle("Monthly total number of pigs slaughtered")
+
+ggAcf(mypigs)
+```
+
+1. There seems to have a weak increasing trend but otherwise it looks like white noise data.
+
+Now we will explore Dow Jones Index data.
+```{r}
+ddj = diff(dj)
+
+autoplot(ddj) +
+  ggtitle("Change in Dow Jones Index")
+
+ggAcf(ddj)
+```
+
+Changes in Dow Jones data looks like a white noise.
