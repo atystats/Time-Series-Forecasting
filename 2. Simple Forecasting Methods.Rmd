@@ -1,0 +1,63 @@
+---
+title: "Forecaster's tool box"
+author: "Ankit Tyagi"
+date: "12/23/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Simple Forecasting Methods :- Some forecasting methods are very simple and are used as benchmark for other complex methods.
+
+1. Average Method :- The forecast of all future values are equal to the average of the historical data.
+
+$$forc(y_{T+h|T}) = (y_1 + y_2 + .......+ y_T)/T$$ 
+2. Naive Method :- The forecast is simply the value of the last observation. That is,
+
+$$forc(y_{T+h|T}) = y_T $$
+A naive forecast is optimal when the data follows a random walk, these are called random walk forecast.
+
+3. Seasonal Naive Method :- The forecast is set to be the last observed value from the season of the year. 
+$$forc(y_{T+h|T}) = y_{T+h-m(k+1)} $$
+where m = the seasonal period.
+and k = no. of complete years in the forecast period prior to time T+h.
+
+4. Drift Method :- A variation on the naive method is to allow the forecasts to increase or decrease over time, where the amount of change over time is set to be the average change seen in the historical data.
+
+$$ forc(y_{T+h|T}) = y_T + \frac{h}{T-1}\sum_{t=2}^T(y_t - y_{t-1})$$
+This is equivalent to drawing a line between the first and last observations, and extrapolating it into the future.
+
+Example of all the above 4 methods :-
+```{r}
+library(fpp2)
+beer2 = window(ausbeer, start = 1992, end = c(2007,4))
+
+autoplot(beer2) +
+  autolayer(meanf(beer2, h = 11),
+            series = "Mean", PI = FALSE) +
+  autolayer(naive(beer2, h = 11),
+            series = "Naive", PI = FALSE) +
+  autolayer(snaive(beer2, h = 11),
+            series = "Seasonal Naive", PI = FALSE) +
+  ggtitle("Forecast for quarterly beer production") +
+  xlab("Year") + ylab("Megalitres") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+Example for applying non seasonal methods :-
+
+```{r}
+autoplot(goog200) +
+  autolayer(meanf(goog200, h = 40),
+                  series = "Mean", PI = FALSE) +
+  autolayer(naive(goog200, h = 40),
+                  series = "Naive", PI = FALSE) +
+  autolayer(rwf(goog200, drift = TRUE,  h = 40),
+                  series = "Drift", PI = FALSE) +
+  ggtitle("Google Stock (daily ending)") +
+  xlab("Day") + ylab("Closing Price (US$)") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
