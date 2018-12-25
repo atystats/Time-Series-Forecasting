@@ -1,0 +1,15 @@
+---
+title: "2. Transformation and Adjustments"
+author: "Ankit Tyagi"
+date: "12/24/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Adjustments :- Adjustments sometimes leads to a simpler forecasting task. The purpose of these adjustments is to simplify the patterns in the historical data by removing the known sources of variation or by making the pattern more consistent across the whole dataset. 
+
+There are 4 kinds of adjustments :- calendar adjustments, population adjustments, inflation adjustments and mathematical transformation.
+
