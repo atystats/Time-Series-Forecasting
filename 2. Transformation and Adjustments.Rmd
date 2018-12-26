@@ -40,7 +40,7 @@ Box-Cox Transformation:- This is a family of transformation that includes both l
 This transformation depends on ℷ.
 
 $$ w_t = log(y_t) if\ \ λ = 0$$
-$$else\ w_t = (y_{t}^{λ} - 1) / λ $$
+$$w_t = (y_{t}^{λ} - 1) / λ \ \ otherwise$$
 If λ = 1, then $w_t = y_t −1$ , so the transformed data is shifted downwards but there is no change in the shape of the time series. But for all other values of λ, the time series will change shape.
 
 Let's see how change in value of λ will effect our time series equation.
@@ -70,9 +70,31 @@ autoplot(BoxCox(elec, lambda))
 
 Having chosen a transformation, we need to forecast the transformed data. Then, we need to reverse the transformation (or back-transform) to obtain forecasts on the original scale. The reverse Box-Cox transformation is given by
 $$ y_t = exp(w_t) if\ \ λ = 0$$
-$$else\ y_t = (λw_t + 1)^{1/λ} $$
+$$y_t = (λw_t + 1)^{1/λ} \ otherwise$$
 
 Features of transformation :-
 1. If the time series values are negative than no power transformation is possible. We can adjust the values by adding a constant value.
 2. The forecasting results are relatively insenstive to the value of λ. Transformation usually have large effect on prediction interval.
 
+Another issue from the transformation is that we transform back to the orginal series, our point forecast won't be the average of the forecast distribution but usually it is the median of the forecast distribution (assuming that the distribution on the transformed space is symmetric). 
+
+For the Box Cox transformation, the back transformed mean is given by :-
+$$y_t = exp(w_t)[1 + \frac{σ^{2}_{h}}{2}]\  if\  λ = 0$$
+$$y_t = (λw_t + 1)^{1/λ} \ [1 + \frac{σ^{2}_{h} (1-λ)}{2(λw_t + 1)^2}] \ \ \ otherwise$$
+where $σ^{2}_{h}$ is the h-step forecast variance.
+
+The difference between the back transformed forecast and the mean is called bias. When we use the mean instead of median, we say the point forecasts have been bias-adjsuted.
+
+We will see an example to see how much difference this bias-adjustment makes.
+Data :- Average annual price of eggs.
+```{r}
+fc = rwf(eggs, drift = TRUE, lambda = 0, h = 50, level = 80)
+fc2 = rwf(eggs, drift = TRUE, lambda = 0.3, h = 50,level = 80, biasadj = TRUE)
+
+autoplot(eggs) +
+  autolayer(fc, series = "Simple back transformation") +
+  autolayer(fc2, series = "Bias adjusted", PI = FALSE) +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+The skewed forecast distribution pulls up the point forecast when we use the bias adjustment.
