@@ -1,5 +1,5 @@
 ---
-title: "Residual Diagnostics"
+title: "Residual Diagnostics and Forecast Accuracy"
 author: "Ankit Tyagi"
 date: "12/29/2018"
 output: html_document
@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+#########################################################################################################################################################################Residual diagnostic############################################
+####################################################################################################################
 
 Fitted Values :- 
 1. Each observation in a time series can be forecast using all previous observations. These values are called Fitted Values. 
@@ -84,4 +86,22 @@ All of the above analysis can be done using just one function.
 ```{r}
 checkresiduals(naive(goog200))
 ```
+
+Forecast accuracy
+
+The size of the residuals is not a reliable indication of how large true forecast errors are likely to be. The accuracy of forecasts can only be determined by considering how well a model performs on new data that were not used when fitting the model.
+
+We divide the dataset in training data (80% usually) and test set (20% data). 
+Forecast error = $Actual(y_{T+h}) - forc(y_{T+h})$.
+Forecast error are different from residuals as the residuals are calculated on the training dataset.
+
+Mean absolute error : MAE :- mean(|$e_t$|).
+Root squared mean error : RMSE :- $\sqrt{mean(e_t^2)}$.
+
+A method that minimize MAE leads to forecast of the median and a method that minimise RMSE leads to the forecast of mean.
+
+The issue with MAE and RMSE is that the results are on same scale as of the data. So we cannot compare the accurancy of methods that are based on datasets of different units.
+
+Mean absolute percentage error : MAPE :- mean(|$p_t$|).
+where $p_t = 100e_t/y_t$.
 
