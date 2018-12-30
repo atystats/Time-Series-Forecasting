@@ -1,0 +1,87 @@
+---
+title: "Residual Diagnostics"
+author: "Ankit Tyagi"
+date: "12/29/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Fitted Values :- 
+1. Each observation in a time series can be forecast using all previous observations. These values are called Fitted Values. 
+2. Fitted Values are often not the actual forecasts because any parameters involved in the forecasting method are estimated using all the available observation in the time series, including future observations. For e.g. Average Method and Drift Method. But in case of naive and seasonal naive, the forecast do not involve any parameter so the fitted values are actual forecasts.
+
+Residual :- Residual in a time series model is what is left over after fitting a model. 
+$$e_t = y_t - fitted(y_t)$$
+If a model fit the data accurately then,
+
+1. The residuals are uncorrelated. If there are correlations between residuals, then there is information left in the residuals which should be used in computing forecasts.
+2.The residual has zero mean. If the residuals have a mean other than zero, then the forecasts are biased. However, adjusting for bias is easy: if the residuals have mean m, then simply add m to all forecasts and the bias problem is solved.
+
+But there is a possobility that more than one forecasting methods satisfy above mentioned properties. So these properties can not be used to select a forecasting method.
+
+Another 2 useful (not necessary) properties to check are 
+1. The residuals have a constant variance.
+2. The residuals are normally distributed.
+
+The above 2 properties makes the calculation for prediction interval more easy otherwise they do not cause any problem in the forecasting.
+
+Now we will see an example of residual analysis.
+```{r}
+library(fpp2)
+autoplot(goog200) +
+  xlab("Day") + ylab("closing prices(in $") +
+  ggtitle("Google Stock(daily ending 6 December 2013")
+```
+
+For stock prices, naive method is often the best method.
+
+```{r}
+autoplot(residuals(naive(goog200))) + 
+  xlab("Day") + ylab("") +
+  ggtitle("Residual from the Naive Method")
+```
+
+The graph above shows that mean of the residuals is close to zero. Also, the variation of the residuals stays same across the historical data, apart from one outlier.
+```{r}
+gghistogram(residuals(naive(goog200))) + ggtitle("Histogram of the residuals")
+```
+
+The histogram shows that the residuals are not normally distributed. There are some extreme observations on the right (positively skewed). The prediction interval calculated assuming the normal distribution may be inaccurate.
+```{r}
+ggAcf(residuals(naive(goog200))) + ggtitle("ACF of residuals")
+```
+
+The autocorrelation is not significant for any lag. 
+
+From above graph it appears that naive method forecasts accounts for all available information.
+
+Portmanteau tests for autocorrelation :-
+One issue with ACF plots is that we make an hypothesis for each of the lag and each test has some probability of giving a false result. If the value of h is large, then it is likely that atleast one of them gives wrong result.
+To overcome this we are going to test whether the first h autocorrelations are significantly different from what is expected from a white noise process. 
+
+Box - Pierce test :- 
+$$ Q = T \sum_{k=1}^{h} r_{k}^{2}\  ,$$
+where h = maximum lag being considered.(usually h = 10 for non seasonal data, h = 2m for seasonal data with seasonal frequency m). The test is still not good if h is too large. So if the values are larger than T/5 use h = T/5.
+
+T = no. of observations.
+
+Ljung-Box test :- $$Q = T(T+2)  \sum_{k=1}^{h}(T-k)^{-1} r_{k}^{2}$$
+If the autocorrelation comes with white noise then both Q follows chi square distribution with (h-K) degrees of freedom where K is the number of parameters in the model.
+
+```{r}
+Box.test(residuals(naive(goog200)), lag = 10, fitdf = 0)
+```
+```{r}
+Box.test(residuals(naive(goog200)), lag = 10, fitdf = 0, type = "Lj")
+```
+
+p values are quite high that means that residuals are not distinguishable from a white noise process.
+
+All of the above analysis can be done using just one function.
+```{r}
+checkresiduals(naive(goog200))
+```
+
