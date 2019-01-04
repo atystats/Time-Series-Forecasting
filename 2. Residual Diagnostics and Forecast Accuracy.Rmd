@@ -105,3 +105,99 @@ The issue with MAE and RMSE is that the results are on same scale as of the data
 Mean absolute percentage error : MAPE :- mean(|$p_t$|).
 where $p_t = 100e_t/y_t$.
 
+Disadvantge of using percentage error :- 
+1. Percentages are infinite or undefined for $y_t$ = 0 and having extreme values for $y_t$ close to zero.
+2. Percentage errors make sense only when the measurement is on interval scale not on the ratio scale because percentage errors assume that the measurement scale has a meaningful zero.
+3. Percentage error ususally put high penalty on the negative error than on positive error as the we always more possibility if making a positive error than making a negetive error.
+
+To solve these issues we might use symmetric MAPE(sMAPE)
+sMAPE :- mean( 200 * $|y_t - forc(y_t)|/(y_t + forc(y_t))$ )
+This still do not solve the issue mentioned in (1) above.
+
+Scaled Error :- To compare the forecast from different time series, we can use scaled error. For the non-seasonal data scaled error can be given as :-
+$$q_j = \frac{e_j}{\frac{1}{T-1} \sum_{t=2}^{T} |y_t - forc(y_t)|}$$
+The denominator is measuring the error from a naive forecast method. 
+1. $q_j$ is independent of units. 
+2. $q_j$ is less than 1 if the forecast is better than the average naive forecast and greater than 1 is the forecast is worse than average naive forecast.
+
+For the seasonal data scaled error can be given as :-
+$$q_j = \frac{e_j}{\frac{1}{T-m} \sum_{t=m+1}^{T} |y_t - forc(y_{t-m})|}$$
+Mean absolute scaled error (MASE) = mean(|$q_t$|).
+
+We will see an example of this on Quarterly Beer Production data. 
+```{r}
+beer2 = window(ausbeer, start = 1992, end = c(2007,4))
+beerfit1 = meanf(beer2, h = 10)
+beerfit2 = rwf(beer2, h = 10)
+beerfit3 = snaive(beer2, h = 10)
+autoplot(window(ausbeer, start = 1992)) +
+  autolayer(beerfit1, series = "Mean", PI = FALSE) +
+  autolayer(beerfit2, series = "Naive", PI = FALSE) +
+  autolayer(beerfit3, series = "Seasonal Naive", PI = FALSE) +
+  ggtitle("Quarterly beer production data") +
+  xlab("Years") + ylab("Megalitres") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+The above graph shows that the seasonal naive fits the data more accurately. We will prove the same using error measures.
+
+```{r}
+beer3 = window(ausbeer, start = 2008)
+accuracy(beerfit1, beer3)
+accuracy(beerfit2, beer3)
+accuracy(beerfit3, beer3)
+```
+
+The seasonal naive method shows the least test error in all the error measures.
+Some times different erroe measures might leads to different conclusion about which is the best forecasting method.
+
+Now we will see a non seasonal data example. Google stock price index
+```{r}
+googfc1 = meanf(goog200, h = 40)
+googfc2 = rwf(goog200, h = 40)
+googfc3 = rwf(goog200, drift = TRUE, h = 40)
+autoplot(subset(goog, end = 240)) +
+  autolayer(googfc1, series = "Mean", PI = FALSE) +
+  autolayer(googfc2, series = "Naive", PI = FALSE) +
+  autolayer(googfc3, series = "Drift", PI = FALSE) +
+  ggtitle("Google Daily Stock Price Index") +
+  xlab("Day") + ylab("Closing Price(in $)") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+The above graph shows that the drift method is giving the best results.
+```{r}
+googtest = window(goog, start = 201, end = 240)
+accuracy(googfc1, googtest)
+accuracy(googfc2, googtest)
+accuracy(googfc3, googtest)
+```
+
+All the error measures shows that drift method gives the best forecast.
+
+Time Series Cross Validation :- In this method we do a series of tests each test contains one test observations and the preceeding that observation is the training set. This way we are not using any future observation for forecast.
+Initial observations are not used for cross validation as the forecast on a small dataset is not reliable.
+
+```{r}
+e = tsCV(goog200, rwf, drift = TRUE, h = 1)
+sqrt(mean(e^2, na.rm = TRUE))
+```
+
+6.233245 is our average cross validation error.
+```{r}
+sqrt(mean(residuals(rwf(goog200, drift = TRUE))^2, na.rm  = TRUE))
+```
+
+RMSE from the residuals is obviously smaller as we are using all the available observations including future observations to forecast.
+
+We can also do a multistep forecast cross validation.
+```{r}
+e = tsCV(goog200, forecastfunction = naive, h = 8)
+
+mse = colMeans(e^2, na.rm = TRUE)
+
+data.frame(h = 1:8, MSE = mse) %>% 
+  ggplot(aes(x = h, y = MSE)) + geom_point()
+```
+
+The above shows how the forecast error is increasing as the forecast horizon is increasing.
