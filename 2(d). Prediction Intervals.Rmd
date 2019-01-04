@@ -1,0 +1,38 @@
+---
+title: "Prediction Interval"
+author: "Ankit Tyagi"
+date: "1/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Prediction Intervals :-
+A prediction interval is an interval within which we expect $y_t$ to lie with a specified probability. Prediction intervals are required to understand how much uncertainity is associated with the point forecast.
+
+If the forecast errors are normally distributed, a 95% prediction interval is given by :-
+$$y_{T+h|T} \pm 1.96\ est(σ_{h})$$
+where h is forecast horizon.
+
+1. One step Prediction usually have forecast error close to the residuals. In case the method do not have a paramter to estimate they are same.
+2. Multi step prediction interval increase as the forecast horizon increase.
+
+The estimate of $σ_{h}$ for different methods are :-
+Mean Forecasts :- $σ \sqrt{1+1/T}$.
+Naive Forecasts :- $σ \sqrt{h}$.
+Seasonal Naive Forecasts :- $σ \sqrt{k +1}$.
+Drift Forecasts :- $σ \sqrt{h(1+h/T)}$.
+
+Prediction intervals for naive methods on Google Price index data
+```{r}
+library(fpp2)
+naive(goog200)
+```
+
+It is clear that as we are moving up in the forecast horizon the prediction intervals are getting wider. This can also be seen in the graph below.
+```{r}
+autoplot(naive(goog200))
+```
+
