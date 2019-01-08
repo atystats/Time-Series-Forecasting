@@ -36,3 +36,24 @@ It is clear that as we are moving up in the forecast horizon the prediction inte
 autoplot(naive(goog200))
 ```
 
+Bootstrap Prediction interval :- If the assumption of normal distribution of forecast error is  unreasonable, then we can use bootstrapping that only assumes that the forecast errors are uncorrelated.
+
+Forecast error 
+$$e_t = y_t - est(y_{t|t-1})$$
+$$=> y_t = est(y_{t|t-1}) + e_t$$
+We can simulate the next observation of a time series using 
+$$y_{T+1} = est(y_{T+1|T}) + e_{T+1}$$
+where $e_{T+1}$ is the unknown future error.
+Assuming future errors are uncorrelated from the past error, we can replace $e_{T+1}$  by sampling from the collection of error we have seen in the past(i.e., residuals). We can repeat this process to obtain 
+$$y_{T+2} = est(y_{T+2|T+1}) + e_{T+2}$$
+
+where $e_{T+1}$ is another draw from the collection of residuals.
+Doing this repeatedly we obtain many possible futures. Then we can compute prediction intervals by calculating percentiles for each forecast horizon. The result is called a bootstrapped prediction interval.
+
+```{r}
+naive(goog200, bootstrap = TRUE)
+```
+
+If the normal distribution assumption holds then bootstrap PI and PI based on normal distribution are similar.
+
+If a transformation has been used, then the prediction interval should be computed on the transformed scale, and the end points back-transformed to give a prediction interval on the original scale. This approach preserves the probability coverage of the prediction interval, although it will no longer be symmetric around the point forecast.
