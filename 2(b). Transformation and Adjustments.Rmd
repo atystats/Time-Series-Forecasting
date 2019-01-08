@@ -81,6 +81,7 @@ Another issue from the transformation is that we transform back to the orginal s
 For the Box Cox transformation, the back transformed mean is given by :-
 $$y_t = exp(w_t)[1 + \frac{σ^{2}_{h}}{2}]\  if\  λ = 0$$
 $$y_t = (λw_t + 1)^{1/λ} \ [1 + \frac{σ^{2}_{h} (1-λ)}{2(λw_t + 1)^2}] \ \ \ otherwise$$
+
 where $σ^{2}_{h}$ is the h-step forecast variance.
 
 The difference between the back transformed forecast and the mean is called bias. When we use the mean instead of median, we say the point forecasts have been bias-adjsuted.
@@ -98,3 +99,126 @@ autoplot(eggs) +
 ```
 
 The skewed forecast distribution pulls up the point forecast when we use the bias adjustment.
+
+
+Excercise :-
+1. Choosing the right Box-Cox transformation.
+a). Annual US net electricity generation.
+
+```{r}
+autoplot(usnetelec) + 
+  ggtitle("US net electricity generation") +
+  xlab("Year") + ylab("billion kwh")
+```
+
+The above plot shows that the variation in time series is not varying that much initially but in a portion of data between 1970-1990 there is some increase in variance.
+It doesn't looks like the transformation is going to fix but we can check it.
+```{r}
+BoxCox.lambda(usnetelec)
+```
+
+Now let's plot for values 0.5 and 0.6.
+```{r}
+autoplot((usnetelec^0.5-1)/0.5) + 
+  ggtitle("US net electricity generation (lambda = 0.5)") +
+  xlab("Year") + ylab("billion kwh")
+
+autoplot((usnetelec^0.6-1)/0.6) + 
+  ggtitle("US net electricity generation (lambda = 0.6)") +
+  xlab("Year") + ylab("billion kwh")
+```
+
+Box Cox transformation is not helping much in this case.
+
+b). Quarterly US GDP.
+```{r}
+autoplot(usgdp) +
+  ggtitle("Quarterly US GDP") +
+  xlab("Quarter")
+```
+
+The time series is not increasing linearly but in a polynomial fashion which can be fixed using a tranformation.
+
+```{r}
+BoxCox.lambda(usgdp)
+```
+
+Let's plot for 0.3 and 0.4.
+```{r}
+autoplot(BoxCox(usgdp,0.3)) + 
+  ggtitle("Quarterly US GDP (lambda = 0.3)") +
+  xlab("Quarter")
+
+autoplot(BoxCox(usgdp,0.4)) + 
+  ggtitle("Quarterly US GDP (lambda = 0.4)") +
+  xlab("Quarter")
+```
+
+Any value around 0.36 would work in this situation.
+
+c). Monthly Copper Price
+```{r}
+autoplot(mcopper) +
+  ggtitle("Monthly copper prices") +
+  xlab("Month")
+```
+
+The above shows that variation in the time series is shifting with level but it's not very consistent.
+We can see if box cox transformation can fox this.
+```{r}
+BoxCox.lambda(mcopper)
+```
+Let's plot for 0.2 and 0.3.
+
+```{r}
+autoplot(BoxCox(mcopper,0.2)) + 
+  ggtitle("Monthly copper prices (lambda = 0.2)") +
+  xlab("Month")
+
+autoplot(BoxCox(mcopper,0.3)) + 
+  ggtitle("Monthly copper prices (lambda = 0.3)") +
+  xlab("Month")
+```
+
+Data has a reduced variance now.
+
+d). Monthly US domestic enplanements
+```{r}
+autoplot(enplanements) +
+  ggtitle("Monthly US domestic enplanements") +
+  xlab("Month")
+```
+
+The above time plot shows that variation is increasing with the level of the series.
+```{r}
+BoxCox.lambda(enplanements)
+```
+
+```{r}
+autoplot(BoxCox(enplanements,-0.2)) +
+  ggtitle("Monthly US domestic enplanements (lambda = -0.2)") +
+  xlab("Month")
+```
+
+It is visually very clear that the variation in the time series is more stable now.
+
+2. Montly Canadian Gas Production
+```{r}
+autoplot(cangas) +
+  ggtitle("Monthly Canadian Gas Production") +
+  xlab("Month")
+```
+
+The time plot shows that variation is not constant across the series but it is not increasing with the level. Box-Cox transformation won't be able to solve this issue. We can see it below as well.
+```{r}
+BoxCox.lambda(cangas)
+```
+
+```{r}
+autoplot(BoxCox(cangas,0.6)) +
+  ggtitle("Monthly US domestic enplanements (lambda = -0.2)") +
+  xlab("Month")
+```
+
+
+The shape of the series remains the same.
