@@ -222,3 +222,66 @@ autoplot(BoxCox(cangas,0.6)) +
 
 
 The shape of the series remains the same.
+
+3). Retail data 
+```{r}
+retaildata = readxl::read_excel("/Users/ankittyagi/Desktop/Time Series Forecasting/Time-Series-Forecasting/Time_series_data/retail.xlsx",skip =1)
+myts = ts(retaildata[,"A3349873A"], start = c(1984,4), frequency = 12)
+autoplot(myts)
+```
+
+The retail data also shows increase in the variance as level of the series increase.
+```{r}
+BoxCox.lambda(myts)
+```
+
+```{r}
+autoplot(BoxCox(myts,0.1)) 
+```
+
+We can see that Box Cox transformation has stabilized the variance.
+
+4). Unemployment benefits in Australia
+```{r}
+autoplot(dole) +
+  ggtitle("Unemployment benefits in Australia") +
+  xlab("Month")
+```
+
+It looks like the variance is not increasing much with the level. But the Box-Cox transformation might help in visualizing the series much better.
+```{r}
+BoxCox.lambda(dole)
+```
+
+```{r}
+autoplot(BoxCox(dole,0.3)) 
+```
+
+Now we can see the series more clearly.
+
+Accidental Deaths in USA :-
+```{r}
+autoplot(usdeaths) +
+  ggtitle("Accidental Deaths in USA") +
+  xlab("Month") + ylab("No. of Deaths")
+```
+
+Looking at the graph it looks like no transformation is required.
+
+```{r}
+autoplot(bricksq) +
+  ggtitle("Quarterly clay brick production") +
+  xlab("Quarter")
+```
+
+It looks like no transformation is required but we can still check if Box Cox is making the visualization more clear.
+
+```{r}
+BoxCox.lambda(bricksq)
+```
+
+```{r}
+autoplot(BoxCox(bricksq,0.2)) 
+```
+
+As we can see that transformation is not making any difference as well.
