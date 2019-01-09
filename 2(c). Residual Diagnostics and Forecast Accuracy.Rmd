@@ -201,3 +201,73 @@ data.frame(h = 1:8, MSE = mse) %>%
 ```
 
 The above shows how the forecast error is increasing as the forecast horizon is increasing.
+
+
+Excercise :-
+
+5). Australian Beer Data 
+The data is seasonal in nature. So, we are using seasonal naive forecast.
+```{r}
+beer <- window(ausbeer, start=1992)
+fc <- snaive(beer)
+autoplot(fc)
+```
+
+```{r}
+res <- residuals(fc)
+autoplot(res)
+```
+
+```{r}
+checkresiduals(fc)
+```
+
+The residuals looks negatively skewed. The last graph shows that they are not normally distributed.
+
+p-value is very small concludes that residuals are autocorrelated.ACF plot shows a spike at lag 4.
+
+Residuals are scattered around zero but some spikes can be seen on the negetive side. Overall it looks like the model does good but can be improved.
+
+6). Internet Usage per minute.
+```{r}
+autoplot(WWWusage) +
+  ggtitle("Internet Usage per Minute") +
+  xlab("Minutes") + ylab("No. of Users")
+```
+
+The data shows no seasonality. We are going to use naive method to fit the data.
+```{r}
+fc = naive(WWWusage)
+res = residuals(fc)
+autoplot(res)
+```
+
+```{r}
+checkresiduals(fc)
+```
+
+Residual plot shows that residuals are not random in nature. There is a possible correlation between the residuals.
+ACF also indicates the same. Overall the naive is not fitting the data properly.
+
+Quarterly clay brick production :-
+```{r}
+autoplot(bricksq) +
+  ggtitle("Quarterly clay brick production") +
+  xlab("Quarter")
+```
+
+The data shows some seasonal patterns so we are going to use seasonal naive method.
+```{r}
+fc = snaive(bricksq)
+res = residuals(fc)
+autoplot(res)
+```
+
+```{r}
+checkresiduals(fc)
+```
+Residual plot shows that residuals have increasing variance. Also we are highly overestimating in some cases that results in spikes in the residuals on the negetive side.
+
+ACF plots also shows correlation among the residuals.
+
+Seasonal naive method is not fitting the data properly.
