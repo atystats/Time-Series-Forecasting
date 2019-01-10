@@ -108,7 +108,7 @@ where $p_t = 100e_t/y_t$.
 Disadvantge of using percentage error :- 
 1. Percentages are infinite or undefined for $y_t$ = 0 and having extreme values for $y_t$ close to zero.
 2. Percentage errors make sense only when the measurement is on interval scale not on the ratio scale because percentage errors assume that the measurement scale has a meaningful zero.
-3. Percentage error ususally put high penalty on the negative error than on positive error as the we always more possibility if making a positive error than making a negetive error.
+3. Percentage error ususally put high penalty on the negative error than on positive error as there is always more possibility of making a positive error than making a negetive error.
 
 To solve these issues we might use symmetric MAPE(sMAPE)
 sMAPE :- mean( 200 * $|y_t - forc(y_t)|/(y_t + forc(y_t))$ )
@@ -266,8 +266,117 @@ autoplot(res)
 ```{r}
 checkresiduals(fc)
 ```
+
 Residual plot shows that residuals have increasing variance. Also we are highly overestimating in some cases that results in spikes in the residuals on the negetive side.
 
 ACF plots also shows correlation among the residuals.
 
 Seasonal naive method is not fitting the data properly.
+
+Retail Data :-
+```{r}
+retaildata = readxl::read_excel("/Users/atyagi/Desktop/Time Series Forecasting/Time-Series-Forecasting/Time_series_data/retail.xlsx",skip =1)
+myts = ts(retaildata[,"A3349873A"], start = c(1984,4), frequency = 12)
+```
+
+Splitting the datasets in train and test.
+```{r}
+myts.train = window(myts, end = c(2010,12))
+myts.test = window(myts, start = 2011)
+```
+
+```{r}
+autoplot(myts) +
+  autolayer(myts.train, series = "Training") +
+  autolayer(myts.test, series = "Test")
+```
+
+The dataset is seasonal in nature, so we will apply sesasonal naive method.
+```{r}
+fc = snaive(myts.train)
+accuracy(fc, myts.test)
+```
+
+```{r}
+checkresiduals(fc)
+```
+
+Residual plots shows that mean of the residuals is greater than zero. Also the variance of the residuals is increasinf with time.
+Residuals are appears to be normally distributed but with a higher peak value.
+Residuals are also correlated as can be seen in the ACF plot and Q-test.
+
+The accuracy measures are also giving some contradicting results. RMSE and MASE had increased in the test set but on the other hand MAPE has decreased. This is happening because we have more residuals with positive values and as it has been mentioned earlier that percentage error put more penalty on the positive errors, it can give us a misleading results if the test data is not as identical as the train data.
+
+9). Quarterly visitor nights for various regions of Australia:-
+Total quarterly visitor nights (in millions) from 1998-2016 for twenty regions of Australia within six states. We are going to pick just one region QLDMetro.
+```{r}
+autoplot(visnights[,"QLDMetro"]) 
+```
+
+```{r}
+train1= window(visnights[,"QLDMetro"], end = c(2015,4))
+train2= window(visnights[,"QLDMetro"], end = c(2014,4))
+train3= window(visnights[,"QLDMetro"], end = c(2013,4))
+fc1 = snaive(train1)
+accuracy(fc1,window(visnights[,"QLDMetro"], start = 2016, end = c(2016,4)))
+fc2 = snaive(train2)
+accuracy(fc2,window(visnights[,"QLDMetro"], start = 2015, end = c(2015,4)))
+fc3 = snaive(train3)
+accuracy(fc3,window(visnights[,"QLDMetro"], start = 2014, end = c(2014,4)))
+```
+
+IBM Stock Prices :-
+```{r}
+autoplot(ibmclose) +
+  ggtitle("IBM Stock Prices") +
+  ylab("Stock Price")
+  
+```
+
+The data has a downward trend and also a cyclic pattern
+```{r}
+train_ibm = window(ibmclose, end = 300)
+test_ibm = window(ibmclose, start = 301)
+fc1 = meanf(train_ibm)
+fc2 = naive(train_ibm)
+fc3 = rwf(train_ibm, drift = TRUE)
+accuracy(fc1, test_ibm)
+accuracy(fc2, test_ibm)
+accuracy(fc3, test_ibm)
+```
+
+Naive method gives the best test accuracy among all the methods. Drift is performing a little worse because in test set the time series start increasing again which is probably because of a cyclic pattern that can be seen the time plot above.
+
+```{r}
+checkresiduals(fc2)
+```
+Residuals looks fine at the start but start increasing in size as the time increase.
+Ljung test also proves that the residuals are correlated to each other which can also be seen in ACF plot.
+
+Housing Sales Data:-
+```{r}
+autoplot(hsales) +
+  ggtitle("Sales of one-family houses") 
+```
+
+The data looks seasonal with a cyclic pattern also present.
+```{r}
+train_hsales = window(hsales, end = c(1993,12))
+test_hsales = window(hsales, start = 1994)
+fc1 = meanf(train_hsales)
+fc2 = naive(train_hsales)
+fc3 = snaive(train_hsales)
+accuracy(fc1, test_hsales)
+accuracy(fc2, test_hsales)
+accuracy(fc3, test_hsales)
+```
+
+As expected, seasonal naive method gives the best results as it takes care of the seasonality present in the data.
+
+```{r}
+checkresiduals(fc3)
+```
+
+We can see that the residuals showing a cyclic pattern that is because the cyclic pattern still exist in the time series.
+Residuals are bimodel and negatively skewed.
+Residuals are also correlated as can be seen the ACF plot.

@@ -61,3 +61,26 @@ autoplot(goog200) +
   guides(colour = guide_legend(title = "Forecast"))
 ```
 
+Excercise 10.
+Dow Jones Data:-
+We Know that drift method is equivalent to a line drawn between the first and the last point extended forward.
+```{r}
+lm_dj = lm(c(dowjones[1],dowjones[78]) ~ c(1,78))
+autoplot(dowjones) +
+  geom_abline(intercept = lm_dj$coefficients[1],
+              slope = lm_dj$coefficients[2],
+              color = "red") +
+    autolayer(rwf(dowjones, drift = TRUE, h = 10))
+```
+
+We will try other methods on the same method:-
+
+```{r}
+autoplot(dowjones) +
+    autolayer(rwf(dowjones, drift = TRUE, h = 10), series = "Drift") +
+    autolayer(naive(dowjones, h = 10), PI = FALSE, series = "Naive") +
+    autolayer(meanf(dowjones, h = 10), PI = FALSE, series = "Mean")
+
+```
+
+As it can be seen that drift method is performing best because it is taking care of the trend component of the time series as well.
