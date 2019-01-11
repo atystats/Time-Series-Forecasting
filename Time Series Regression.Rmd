@@ -1,0 +1,55 @@
+---
+title: "Time Series Regression"
+author: "Ankit"
+date: "1/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In time series regression model, we will predict our forecast variable y using independent(regressor) variable x. To do that we will first assume that y and x linearly related to each other.
+
+Simple Linear Regression :- Simple linear regression tries to forecast the value of forecast variable y using just one single predictor variable. In other words, we are trying to find the linear relationship between y and x obviously assuming there is a linear relationship exist.
+
+$$y_t = b_o + b_1 x + e_t$$
+
+where $b_o$ represents the intercept of the line or predicted value of y for x = 0. 
+and $b_1$ represents the slope of the line or the average predicted change in y results from a unit increase in x.
+
+For e.g. 
+```{r}
+drat_cen_2.76 = mtcars$drat - 2.76 # we are centering the variable so that we can have a zero on the x-axis.
+plot(drat_cen_2.76, mtcars$mpg)
+abline(lm(mtcars$mpg~drat_cen_2.76))
+```
+
+In the above fitted straight line, $b_o$ is the value of mpg when the drat is 0 which is 13.667.
+$b_1$ is the rate at which the straight is increasing.
+$e_t$ is the vertical distance between the straight line and the data points. $e_t$ captures anything that effects $y_t$ other than $x_t$.
+
+One way to look at the relationship between the forecast variable and predictor variable in the same plot.
+
+```{r}
+autoplot(uschange[,c("Consumption","Income")]) +
+  ylab("% Change") + xlab("Year")
+```
+
+The above graph shows a strong correlation between change in consumption and income.
+
+We will now fit a linear model between consumption and income and plot
+```{r}
+uschange %>%
+  as.data.frame() %>%
+  ggplot(aes(x = Income, y = Consumption)) +
+  ylab("Consumption") +
+  xlab("Income") +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+tslm(Consumption ~ Income, data = uschange)
+```
+
