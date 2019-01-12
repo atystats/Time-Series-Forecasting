@@ -1,0 +1,157 @@
+---
+title: "Time Series Regression"
+author: "Ankit"
+date: "1/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In time series regression model, we will predict our forecast variable y using independent(regressor) variable x. To do that we will first assume that y and x linearly related to each other.
+
+Simple Linear Regression :- Simple linear regression tries to forecast the value of forecast variable y using just one single predictor variable. In other words, we are trying to find the linear relationship between y and x obviously assuming there is a linear relationship exist.
+
+$$y_t = b_o + b_1 x + e_t$$
+
+where $b_o$ represents the intercept of the line or predicted value of y for x = 0. 
+and $b_1$ represents the slope of the line or the average predicted change in y results from a unit increase in x.
+
+For e.g. 
+```{r}
+drat_cen_2.76 = mtcars$drat - 2.76 # we are centering the variable so that we can have a zero on the x-axis.
+plot(drat_cen_2.76, mtcars$mpg)
+abline(lm(mtcars$mpg~drat_cen_2.76))
+```
+
+In the above fitted straight line, $b_o$ is the value of mpg when the drat is 0 which is 13.667.
+$b_1$ is the rate at which the straight is increasing.
+$e_t$ is the vertical distance between the straight line and the data points. $e_t$ captures anything that effects $y_t$ other than $x_t$.
+
+One way to look at the relationship between the forecast variable and predictor variable is to visualize them in the same plot.
+
+```{r}
+library(fpp2)
+autoplot(uschange[,c("Consumption","Income")]) +
+  ylab("% Change") + xlab("Year")
+```
+
+The above graph shows a strong correlation between change in consumption and income.
+
+We will now fit a linear model between consumption and income and plot it.
+```{r}
+uschange %>%
+  as.data.frame() %>%
+  ggplot(aes(x = Income, y = Consumption)) +
+  ylab("Consumption") +
+  xlab("Income") +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+tslm(Consumption ~ Income, data = uschange)
+```
+
+The sign of the $b_1$ tells us if the relationship is positive or negetive which is in this case is positive.
+For 1 percentage point increase in income, predicted average percentage increase in consumption is 0.2806.
+0.5451 is the change in consumption when the change in income is zero. (This doesn't always make sense only when x=0 is meaningful).
+
+/////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+Multiple Linear Regression
+
+/////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+When we have more than one predictors, the model is called multiple regression model.
+
+$$y_t = b_o +b_1x_{1,t} + b_2x_{2,t} +......+ b_kx_{k,t} + e_t$$
+Each of the effects are numerical. The coefficients in the model measures the effect of each predictors after taking into account the effects of all the predictors in the model. Hence they measure the marginal effects of the predictor variable.
+
+Now we will add more features in the above model.
+```{r}
+autoplot(uschange[,c("Production","Savings","Unemployment")], facets = TRUE) + 
+  ylab("% Change")
+```
+
+We can see the relationship of the variables.
+```{r}
+uschange %>% 
+  as.data.frame() %>%
+  GGally::ggpairs()
+```
+
+The scatterplot shows the positive relationship between consumption and income, production and negetive relationship with savings and unemployement.
+
+Assumptions of the linear model:-
+1.Erros have zero mean.
+2. Errors are not autocorrelated. This means there is more information in the data that can be exploited using a linear model.
+3. Errors are unrelated to predictor variables, otherwise there would be more information that should be included in the systematic part of the model.
+
+Other assumption :-
+Errors are normally distributed with constant variance. This is useful in producing prediction intervals.
+Each predictor is not a random variable.
+
+
+Least Square Estimate :-
+The values of b's is estimated using the least square principle. We choose the values of $b_o, b_1,....,b_k$ that minimise $$\sum_{t=1}^{T}e_{t}^{2} = \sum_{t=1}^{T} (y_t - b_o - b_1x_{1,t} - b_2x_{2,t} - .... -b_kx_{k,t})^2.$$
+
+This is called least squares estimation because it gives the least value for the sum of squared errors. 
+
+Now we are fitting a multiple regression model for the same data using all the available variables.
+```{r}
+fit_cons = tslm(Consumption ~ Income + Production + Unemployment + Savings, data = uschange)
+summary(fit_cons)
+```
+
+Estimate :- value of b's in the regression equation.
+Std.Error :- The standard error gives a measure of the uncertainty in the estimated 'b' coefficient. The standard deviation which would be obtained from repeatedly estimating the 'b' coefficients on similar data sets.
+
+The last two columns are useful when you're studying the effect of predictors.
+t value :- The “t value” is the ratio of an estimated 'b' coefficient to its standard error.
+Pr(>|t|) :- the probability of the estimated 'b' coefficient being as large as it is if there was no real relationship between consumption and the corresponding predictor.
+
+Now we will plot the estimated and actual value together. 
+```{r}
+autoplot(uschange[,"Consumption"],series = "Data") +
+  autolayer(fitted(fit_cons), series = "Fitted") +
+  xlab("Year") + ylab("") +
+  ggtitle("Percentage change in US consumption expenditure") +
+  guides(colour = guide_legend(title = " "))
+```
+
+```{r}
+cbind(Data = uschange[,"Consumption"],Fitted = fitted(fit_cons)) %>%
+  as.data.frame() %>%
+  ggplot(aes(x = Data, y = Fitted)) +
+  geom_point() +
+  xlab("Data (Actual Values)") +
+  ylab("Fitted (predicted values)") +
+  ggtitle("Percentage change in US Consumption expenditure") +
+  geom_abline(intercept = 0, slope = 1)
+```
+
+Goodness of Fit :-
+One way to check how well model fits the data is to calculate coefficient of determination ($R^2$).
+$$R^2 = \frac{\sum(est(y_t) - mean(y_t))^2}{\sum(y_t - mean(y_t))^2},$$
+This formula above reflects the proportion of variation in the forecast variable that is explained by the regression model.
+
+In case of simple linear regression, $R^2$ is equivalent to the square of the correlation of y and x(provided an intercept has been included).
+
+$R^2$ lies between 0 to 1. Closer to 1 means that model fits the data well. 
+In the above fitted model, the value is 0.754. We can find it below the coefficient table.
+
+Limitation of $R^2$ :-
+1. $R^2$ can never decrease on adding a predictor variable to the model. This usually leads to assuming that model is improving and we might end up overfitting the model.
+2. There is no rule about what should be the good $R^2$ value. 
+3. $R^2$ is calculated on the training data which might not be the best way to evaluate the accuracy. We might want to test the performance on the test data.
+
+Residual Standard Error :-
+Another way to find how well model fits the data is to calculate residual squared error.
+$$\sqrt{\frac{1}{T-k-1}\sum_{t=1}^{T}e_t^2}$$
+
+where k = no. of parameters.
+T = no. of observations.
+
+We can compare this with the standard deviation of y to understand how well the data has performed.
+In the above model, this value is 0.329.
