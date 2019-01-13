@@ -41,6 +41,7 @@ Bootstrap Prediction interval :- If the assumption of normal distribution of for
 Forecast error 
 $$e_t = y_t - est(y_{t|t-1})$$
 $$=> y_t = est(y_{t|t-1}) + e_t$$
+For $e_t$, we use a sample from the residuals of the past observtions.
 We can simulate the next observation of a time series using 
 $$y_{T+1} = est(y_{T+1|T}) + e_{T+1}$$
 where $e_{T+1}$ is the unknown future error.
