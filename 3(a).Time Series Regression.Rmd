@@ -155,3 +155,73 @@ T = no. of observations.
 
 We can compare this with the standard deviation of y to understand how well the data has performed.
 In the above model, this value is 0.329.
+
+
+Evaluating the time series regression model :-
+
+We know that residual $$e_t = \sum_{t=1}^{T}(y_t - est(y_t))$$
+
+Each residual is the unpredictable component of the associated observation.
+
+The 2 properties associated with residuals are :-
+1. Mean of the residual is zero.
+2. Correlation between the residuals and predictor variable is zero.
+
+After the model is fit, we need to plot the residuals and check if these 2 properties are satisfied are not.
+
+One issue with regression model is that many times the value of a variable in current time is similar to its previous value. Therfore, when fitting the regression model, it is usual to find autocorrelation in the errors because regression do not incorporate the past behaviour of the same variable in the current value prediction.
+
+The test of autocorrelation in the residuals designed to take account for the regression model is the Breusch-Godfrey test.
+The Breusch-Godfrey test is similar to the Ljung-Box test, but it is specifically designed for use with regression models.
+
+We can also check if the residuals are normally distributed. This is not necessary but it makes the prediction interval calculation much easier.
+
+```{r}
+checkresiduals(fit_cons)
+```
+
+We can see that mean of the residuals could be close to zero but the residuals are varying with time that explains some autocorrelation. 
+The histogram shows that the residuals seem to be slightly skewed, which may affect the coverage probability of the prediction intervals.
+The ACF plot shows one spike at lag 7 but p value is not signficant in B-G test. So, autocorrelation probably won't effect the forecast much.
+
+Residual plots against predictors:-
+If the underlying assumption of linear relationship between forecast and predictor variable is true then we expect residuals to be randomly scattered across the predictor variable. If the scatter plot shows a pattern then the relationship may ne non linear.
+
+It is also necessary to plot the residuals against any predictors that are not in the model. If any of these show a pattern, then the corresponding predictor may need to be added to the model.
+
+```{r}
+library(gridExtra)
+df = as.data.frame(uschange)
+df[,"residuals"] = as.numeric(residuals(fit_cons))
+p1 = ggplot(df, aes(x = Income, y = residuals)) + 
+  geom_point()
+p2 = ggplot(df, aes(x = Savings, y = residuals)) + 
+  geom_point()
+p3 = ggplot(df, aes(x = Production, y = residuals)) + 
+  geom_point()
+p4 = ggplot(df, aes(x = Unemployment, y = residuals)) + 
+  geom_point()
+gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2)
+```
+
+The residuals are looking randomly scattered.
+
+Residual plots against fitted values :-
+A plot of the residuals against the fitted values should also show no pattern. If a pattern is observed, there may be heteroscedasticity in the errors which means that the variance of the residuals may not be constant. If this problem occurs, a transformation of the forecast variable such as a logarithm or square root may be required
+
+```{r}
+cbind(Fitted = fitted(fit_cons),Residuals = residuals(fit_cons)) %>%
+  as.data.frame() %>%
+  ggplot(aes(x=Fitted, y= Residuals)) +
+  geom_point()
+```
+
+Errors looks randomly scattered and so are homoscedastic.
+
+Outliers :- Observations that take extreme values compared to the majority of the data are called outliers. 
+We can identify outliers by looking at a scatter plot.
+
+If outliers are incorrect data entry then we just simply remove them.
+Outliers occur when some observations are simply different. In this case it may not be wise for these observations to be removed. If an observation has been identified as a likely outlier, it is important to study it and analyse the possible reasons behind it.
+
+Observations that have a large influence on the estimated coefficients of a regression model are called influential observations.Usually, influential observations are also outliers that are extreme in the x direction.
