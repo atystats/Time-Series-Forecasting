@@ -1,0 +1,58 @@
+---
+title: "3(b). Regression- selecting predictors and forecasting"
+author: "Ankit Tyagi"
+date: "1/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Fitting Trend :-
+Trend is common among time series. we usually visualize the data and get the idea of the trend. A linear trend can be fitted using the equation :- $$y_t = b_0 + b_1 t + e_t$$
+where t = 1,2,....T. 
+
+We can identify the non linear trend and fit a non linear equation as well.
+
+Fitting Seasonality :- Suppose that we are forecasting daily data and we want to account for the day of the week as a predictor. Then we create a dummy variable for each day except one (six dummy in this case). The effect of the seventh day is captured in the intercept.
+
+Let's see an example on Australian Beer Production data 
+```{r}
+beer2 = window(ausbeer, start = 1992)
+autoplot(beer2) +
+  xlab("Year") + ylab("Megalitres")
+```
+
+The quarterly data above shows seasonality and a decreasing trend.
+We can model this using the equation :-
+$$y_t = b_0 + b_1t + b_2d_{2,t} + b_3d_{3,t} + b_4d_{4,t}$$
+$b_1$ is to capture the effect of trend. rest of the b's are to capture the effect of 3 quarters and effect of 1st quarter will be captured in intercept.
+Coefficients associated with the other quarters are measures of the difference between those quarters and the first quarter.
+
+```{r}
+fit.beer = tslm(beer2 ~ trend + season)
+summary(fit.beer)
+```
+
+There is an average negetive trend of -0.34 per quarter. On average, the second quarter has production of 34.7 megalitres lower than the first quarter, the third quarter has production of 17.8 megalitres lower than the first quarter, and the fourth quarter has production of 72.8 megalitres higher than the first quarter.
+
+Let's see the fit of the model using some visualization.
+```{r}
+autoplot(beer2, series = "Data") +
+  autolayer(fitted(fit.beer), series = "Fitted") +
+  xlab("Year") + ylab("Megalitres") +
+  ggtitle("Quarterly Beer Production")
+```
+
+```{r}
+cbind(Data = beer2, Fitted = fitted(fit.beer)) %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = Data, y = Fitted, colour = as.factor(cycle(beer2)))) +
+  geom_point() +
+  ylab("Fitted") + xlab("Actual Values") +
+  ggtitle("Quarterly Beer Production") +
+  scale_color_brewer(palette = "Dark2", name = "Quarter") +
+  geom_abline(slope = 1, intercept = 0)
+```
+
