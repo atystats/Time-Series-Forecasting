@@ -9,16 +9,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Fitting Trend :-
+**Fitting Trend :-**
 Trend is common among time series. we usually visualize the data and get the idea of the trend. A linear trend can be fitted using the equation :- $$y_t = b_0 + b_1 t + e_t$$
 where t = 1,2,....T. 
 
 We can identify the non linear trend and fit a non linear equation as well.
 
-Fitting Seasonality :- Suppose that we are forecasting daily data and we want to account for the day of the week as a predictor. Then we create a dummy variable for each day except one (six dummy in this case). The effect of the seventh day is captured in the intercept.
+**Fitting Seasonality :-** Suppose that we are forecasting daily data and we want to account for the day of the week as a predictor. Then we create a dummy variable for each day except one (six dummy in this case). The effect of the seventh day is captured in the intercept.
 
 Let's see an example on Australian Beer Production data 
 ```{r}
+library(fpp2)
 beer2 = window(ausbeer, start = 1992)
 autoplot(beer2) +
   xlab("Year") + ylab("Megalitres")
@@ -56,3 +57,20 @@ cbind(Data = beer2, Fitted = fitted(fit.beer)) %>%
   geom_abline(slope = 1, intercept = 0)
 ```
 
+**Intervention Variables :- **It is often necessary to model interventions that may have affected the variable to be forecast. For example, competitor activity, advertising expenditure, industrial action, and so on, can all have an effect.
+When the effect lasts only for one period, we use a “spike” variable. "Spike" will takes value 1 in the period of intervention and zero elsewhere.
+When the effect of intervention is permanent and immediate. If an intervention causes a level shift, we use a "step" variable. A step variable takes value zero before the intervention and one from the time of intervention onward.
+
+There are other kind of intervention, that can be handled using some non linear equation.
+
+**Trading Days :- **No. of trading days in a month can vary considerably and can have a substantial effect on the sales data. For that we can include no. of trading days as a variable.
+
+**Distributed Lags :- **It is often useful to include advertising expenditure as a predictor. However, since the effect of advertising can last beyond the actual campaign, we need to include lagged values of advertising expenditure.
+
+**Fourier Series :- **One issue with seasonal dummy variable is that if seasonal period are large then we have to create a lot of dummy variables. An alternate to that is to use Fourier series that is able to capture periodic function. 
+```{r}
+fourier.beer = tslm(beer2 ~ trend + fourier(beer2, K = 2)) #K = m/2, m = seasonal period
+summary(fourier.beer)
+```
+
+A regression model containing Fourier terms is often called a harmonic regression
