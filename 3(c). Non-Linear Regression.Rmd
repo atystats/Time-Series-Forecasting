@@ -1,0 +1,127 @@
+---
+title: "3(c). Non-Linear Regression"
+author: "Ankit"
+date: "1/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This notebook is just an introduction to Non Linear Regression.
+There are cases where the assumption of linear relationship is not valid. We use non linear regression to solve those problems.
+
+A simple way of modelling a non linear relationship is to transform the forecast variable y and/or the predictor variable. before estimating the regression model.
+
+We will look at some simple model tranformation that can be used:-
+
+**Log-log Function :-**
+$$log\ y = b_0 + b_1log\ x + e$$
+In this setting, $b1$ represents the average percentage change in y resulting from a 1% increase in x.
+
+The log-linear form is specified by only transforming the forecast variable and the linear-log form is obtained by transforming the predictor.
+Note that before applying log, we need to make sure that all the values of x or y are greater than 0. In the case that variable x contains zeros, we use the transformation log(x+1). Also, we need to be aware that forecast will remains zero on the forcast scale as well.
+
+**Piecewise Regression :-**
+I f we represent our model as :-
+$$ y = f(x) + e$$
+In this setting, we introduce a point where the slope f can change. These points are called knots. 
+This can be achieved by letting $x_{1,t}$ = x and introducing variable $x_{2,t}$ such that 
+
+$$x_{2,t} = 0\ \  if \ \ x < c \\
+x_{2,t} = (x-c)\ \ if \ \ x >= c$$
+This forces the slope to bend at point c.
+
+Piecewise linear regression constructed this way are the special case of regression splines.
+In general, a linear regression spline is obtained using
+$$x_1 = x,\ x_2 = (x-c_1)_+,\ x_3 = (x-c_2)_+,....,x_k = (x-c_{k-1})_+$$
+where $c_1, c_2,....c_{k-1}$ are the knots.
+
+We can make the shift in slope more smooth by adding cubic terms as well.
+$$x_1 = x,\ x_2 = x^2,\ x_3 = x^3,\ x_4 = (x-c_1)_+,\ x_5 = (x-c_2)_+,....,x_k = (x-c_{k-3})_+$$
+Cubic splines improves the fit of the data but can give very invalid results when used on new data especially is the new values of x are outside the old range.
+
+Similar non linear fit can be introduced in fitting trend as well. Just simply need to replace x with t in above equations.
+
+We will see an example now.
+Boston Marathon winning time since 1897.
+```{r}
+library(fpp2)
+autoplot(marathon) +
+  ggtitle("Boston Marathon winning time since 1897") +
+  xlab("Years") + ylab("time(in minutes)")
+```
+
+The above timeplot shows different trend at different point of time. There is a decreasing trend till year 1921, then increasing till 1930 and then decreasing again afterwards.
+Also, there is some heterocedasticity present in the data, the variation is decreasing with time.
+
+```{r}
+autoplot(marathon) +
+  autolayer(fitted(tslm(marathon ~ trend)), series = "Linear Fitted Trend") +
+  ggtitle("Boston Marathon winning time since 1897") +
+  xlab("Years") + ylab("time(in minutes)") +
+  guides(colour = guide_legend(title = ""))
+```
+
+Above is the case when we fit one linear trend for the marthon data. As we can see that we are underestimating for year around 1930 till 1950 and overestimating for year 1910 to 1922. We can fit the trend better using piecewise regression.
+
+```{r}
+h = 10
+fit.lin = tslm(marathon ~ trend)
+fcasts.lin = forecast(fit.lin, h = h)
+fit.exp = tslm(marathon ~ trend, lambda = 0)
+fcasts.exp = forecast(fit.exp, h = h)
+
+t = time(marathon)
+t.knot1 = 1940
+t.knot2 = 1980
+tb1 = ts(pmax(0,t - t.knot1), start = 1897)
+tb2 = ts(pmax(0,t - t.knot2), start = 1897)
+
+fit.pw = tslm(marathon ~ t + tb1 + tb2)
+fit.spline = tslm(marathon ~ t + I(t^2) + I(t^3) + I(tb1^3) + I(tb2^3))
+
+t.new = t[length(t)] + seq(h)
+tb1.new = tb1[length(tb1)] + seq(h)
+tb2.new = tb2[length(tb2)] + seq(h)
+
+new_data = cbind(t = t.new, tb1 = tb1.new, tb2 = tb2.new) %>%
+  as.data.frame()
+fcasts.pw = forecast(fit.pw, newdata = new_data)
+fcasts.spline = forecast(fit.spline, newdata = new_data)
+
+autoplot(marathon) +
+  autolayer(fitted(fit.lin), series = "Linear") +
+  autolayer(fitted(fit.exp), series = "Exponential") +
+  autolayer(fitted(fit.pw), series = "Piecewise") +
+  autolayer(fitted(fit.spline), series = "Cubic Spline") +
+  autolayer(fcasts.pw, series = "Piecewise") +
+  autolayer(fcasts.lin, series = "Linear", PI = FALSE) +
+  autolayer(fcasts.exp, series = "Exponential", PI = FALSE) +
+  autolayer(fcasts.spline, series = "Cubic Spline", PI = FALSE) +
+  ggtitle("Boston Marathon winning time since 1897") +
+  xlab("Years") + ylab("time(in minutes)") +
+  guides(colour = guide_legend(title = ""))
+```
+
+As can be seen that cubic spline fits the data best but gives poor result for the new data because of smoothning. Piecewise gives a better result but still overestimate for a portion of data between 1910 to 1922.
+
+There is an alternative formulation of cubic splines (called natural cubic smoothing splines) that imposes some constraints, so the spline function is linear at the end, which usually gives much better forecasts without compromising the fit.
+
+This uses many more knots than we used in above graph, but the coefficients are constrained to prevent over-fitting, and the curve is linear at both ends. This has the added advantage that knot selection is not subjective. We can use a log transformation (lambda=0) to handle the heteroscedasticity.
+
+```{r}
+marathon %>% 
+  splinef() %>%
+  autoplot()
+```
+
+As we can see that the start and the end of the spline curve is linear.
+```{r}
+marathon %>% 
+  splinef() %>%
+  checkresiduals()
+```
+
+The mean of the error is appears to be zero but there is still some heterocedasticity left. The initial noise in the historical data is causing some problem which might be ignored as we are more interested in the new experience.
