@@ -59,10 +59,8 @@ The sign of the $b_1$ tells us if the relationship is positive or negetive which
 For 1 percentage point increase in income, predicted average percentage increase in consumption is 0.2806.
 0.5451 is the change in consumption when the change in income is zero. (This doesn't always make sense only when x=0 is meaningful).
 
-/////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-## Multiple Linear Regression
+##Multiple Linear Regression
 
-/////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 When we have more than one predictors, the model is called multiple regression model.
 
@@ -239,3 +237,38 @@ Multicollinearity can also occur when a linear combination of predictors is high
 
 In case of perfect correlation, it is not possible to calculate the coefficients.
 When multicollinearity is present, the uncertainty associated with individual regression coefficients will be large. This is because they are difficult to estimate. Consequently, statistical tests (e.g., t-tests) on regression coefficients are unreliable. Also, it will not be possible to make accurate statements about the contribution of each separate predictor to the forecast.
+
+#### Excercise 
+1. We are going to explore daily electricity demand for Victoria, Australia.
+```{r}
+daily20 = head(elecdaily, 20)
+autoplot(daily20[,c("Demand","Temperature")], facets = TRUE) +
+  ggtitle("Electricity Demand") +
+  xlab("Day") + ylab("")
+```
+
+Plotting the 2 columns, it is clear that Demand and Temprature seems correlated.
+```{r}
+fit.dem = tslm(Demand ~ Temperature, data = daily20)
+summary(fit.dem)
+```
+
+The model also shows a positive coefficient for temperature. Unit increase in temperature results in 6.7572 unit increase in Demand of electricity.
+```{r}
+checkresiduals(fit.dem)
+```
+
+The residual plot shows very high variance and also an increasing trend as well. Residuals are not normally distributed.
+
+```{r}
+forecast(fit.dem, newdata = data.frame(Temperature = c(15,35)))
+```
+
+```{r}
+elecdaily %>%
+  as.data.frame() %>%
+  ggplot(aes(x = Demand, y = Temperature)) +
+  geom_point()
+```
+
+Plotting the full data shows us that the 2 variables have a non linear relationship.
