@@ -134,7 +134,7 @@ cbind(Data = uschange[,"Consumption"],Fitted = fitted(fit_cons)) %>%
 
 **Goodness of Fit :-**
 One way to check how well model fits the data is to calculate coefficient of determination ($R^2$).
-$$R^2 = \frac{\sum(est(y_t) - mean(y_t))^2}{\sum(y_t - mean(y_t))^2},$$
+$$R^2 = \frac{\sum((\hat{y}_t) - (\overline{y}_t))^2}{\sum(y_t - (\overline{y}_t))^2},$$
 This formula above reflects the proportion of variation in the forecast variable that is explained by the regression model.
 
 In case of simple linear regression, $R^2$ is equivalent to the square of the correlation of y and x(provided an intercept has been included).
@@ -160,7 +160,7 @@ In the above model, this value is 0.329.
 
 **Evaluating the time series regression model :-**
 
-We know that residual $$e_t = \sum_{t=1}^{T}(y_t - est(y_t))$$
+We know that residual $$e_t = \sum_{t=1}^{T}(y_t - \hat{y}_t)$$
 
 Each residual is the unpredictable component of the associated observation.
 
