@@ -13,7 +13,7 @@ Prediction Intervals :-
 A prediction interval is an interval within which we expect $y_t$ to lie with a specified probability. Prediction intervals are required to understand how much uncertainity is associated with the point forecast.
 
 If the forecast errors are normally distributed, a 95% prediction interval is given by :-
-$$y_{T+h|T} \pm 1.96\ est(σ_{h})$$
+$$y_{T+h|T} \pm 1.96\ \hat{σ}_{h}$$
 where h is forecast horizon.
 
 1. One step Prediction usually have forecast error close to the residuals. In case the method do not have a paramter to estimate they are same.
@@ -39,14 +39,14 @@ autoplot(naive(goog200))
 Bootstrap Prediction interval :- If the assumption of normal distribution of forecast error is  unreasonable, then we can use bootstrapping that only assumes that the forecast errors are uncorrelated.
 
 Forecast error 
-$$e_t = y_t - est(y_{t|t-1})$$
-$$=> y_t = est(y_{t|t-1}) + e_t$$
+$$e_t = y_t - \hat{y}_{t|t-1}$$
+$$=> y_t = \hat{y}_{t|t-1} + e_t$$
 For $e_t$, we use a sample from the residuals of the past observtions.
 We can simulate the next observation of a time series using 
-$$y_{T+1} = est(y_{T+1|T}) + e_{T+1}$$
+$$y_{T+1} = \hat{y}_{T+1|T} + e_{T+1}$$
 where $e_{T+1}$ is the unknown future error.
 Assuming future errors are uncorrelated from the past error, we can replace $e_{T+1}$  by sampling from the collection of error we have seen in the past(i.e., residuals). We can repeat this process to obtain 
-$$y_{T+2} = est(y_{T+2|T+1}) + e_{T+2}$$
+$$y_{T+2} = \hat{y}_{T+2|T+1} + e_{T+2}$$
 
 where $e_{T+1}$ is another draw from the collection of residuals.
 Doing this repeatedly we obtain many possible futures. Then we can compute prediction intervals by calculating percentiles for each forecast horizon. The result is called a bootstrapped prediction interval.
