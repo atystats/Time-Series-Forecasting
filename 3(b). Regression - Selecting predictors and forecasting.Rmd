@@ -221,4 +221,70 @@ $$\mathbf{X} = \left[\begin{array}
 \end{array}\right]
 $$
 
+#### Excercise
+2. Winning Times in Olympics men's 400m track final.
+
+```{r}
+autoplot(mens400) + 
+  xlab("Year") + ylab("Time(in minutes)")
+```
+
+The data shows a decreasing trend over the years. Some missing observations are due to world war when Olympics were cancelled.
+```{r}
+tslm(mens400 ~ trend)
+```
+
+The winning time is decreasing at a rate of 0.25 minutes or 25 seconds.
+
+```{r}
+checkresiduals(tslm(mens400 ~ trend))
+```
+
+Autocorrelation is present in the data. Also there is an outlier present in the data in year 1895.
+Also, there is some increasing trend can be seen in residuals after fitting the data.
+
+```{r}
+fit.mens = tslm(mens400 ~ trend)
+forecast(fit.mens, h = 4)
+```
+
+5. Monthly Sales Figure of a shop
+```{r}
+autoplot(log(fancy/monthdays(fancy))) +
+  xlab("Years") + ylab("Sales")
+```
+
+There is an increasing trend in the data with seasonal variation. Also, the variation in series is increasing with time. Also it seems that seasonal patterns are not consistent. 
+Year 1991 shows a decrease in sales rather than increase.
+
+The logarithmic transformation is required to control the varince first.
+```{r}
+surf_dummy = rep(0, length(fancy))
+surf_dummy[cycle(fancy) == 3] = 1
+surf_dummy[floor(time(fancy)) == 1987] = 0
+fit.fancy = tslm(fancy ~ trend + season + surf_dummy, lambda = 0)
+summary(fit.fancy)
+```
+
+```{r}
+checkresiduals(fit.fancy)
+```
+
+Residuals are showing cyclic pattern, probably the log transformation was not good enough for the data. Same thing can be seen in the ACF plot as well.
+
+```{r}
+data.frame(residuals = residuals(fit.fancy),Month = cycle(fancy)) %>%
+  ggplot(aes(x = Month, y = residuals, group = Month)) +
+  geom_boxplot()
+```
+
+Box plot shows that the variation among residuals is not constant accross months. This might be because the seasonal patterns were not consistent and hence result in high residuals for some years.
+
+```{r}
+new_data = rep(0,36)
+new_data = ts(data = new_data, start = 1994, end = c(1996,12), frequency = 12)
+new_data[cycle(new_data) == 3] = 1
+forecast(fit.fancy, newdata = data.frame(surf_dummy = new_data))
+```
+
 

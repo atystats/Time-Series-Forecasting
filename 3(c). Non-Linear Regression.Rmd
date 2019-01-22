@@ -125,3 +125,26 @@ marathon %>%
 ```
 
 The mean of the error is appears to be zero but there is still some heterocedasticity left. The initial noise in the historical data is causing some problem which might be ignored as we are more interested in the new experience.
+
+
+
+Level of Lake Huron :-
+```{r}
+autoplot(huron)
+```
+
+The data has a decreasing trend till 1900 and then an increasing trend from 1930 to 1950.
+
+```{r}
+t = time(huron)
+tb1 = ts(pmax(0,t - 1915), start = 1875)
+fit.huron = tslm(huron ~ t + tb1)
+summary(fit.huron)
+```
+
+```{r}
+autoplot(huron) +
+  autolayer(fitted(fit.huron), series = "Fitted")
+```
+
+The model do not identify any trend for year 1915 afterwards.

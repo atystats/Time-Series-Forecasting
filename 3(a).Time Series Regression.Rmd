@@ -272,3 +272,4 @@ elecdaily %>%
 ```
 
 Plotting the full data shows us that the 2 variables have a non linear relationship.
+
