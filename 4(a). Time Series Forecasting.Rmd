@@ -1,0 +1,20 @@
+---
+title: "4(a). Time Series Decomposition"
+author: "Ankit"
+date: "1/23/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There are 3 components of time series that we have discussed:-
+1. Trend.
+2. Seasonality.
+3. Cycles.
+
+When we decompose a time series, we usually combine the trend and cyclic variation. Cyclic variations are difficult to seperate out because first we are going to need a lot of data to find out the actual variation that is coming from cycles. 
+Secondly, the frequency is not fixed for the cyclic variation so even if we identify the cyclicity we cannot use for future prediction as the future cyclic might be very different from the historic one.
+
+
