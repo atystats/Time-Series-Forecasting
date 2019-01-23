@@ -1,0 +1,32 @@
+---
+title: "4(a). Time Series Decomposition"
+author: "Ankit"
+date: "1/23/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There are 3 components of time series that we have discussed:-
+1. Trend.
+2. Seasonality.
+3. Cycles.
+
+When we decompose a time series, we usually combine the trend and cyclic variation. Cyclic variations are difficult to seperate out because first we are going to need a lot of data to find out the actual variation that is coming from cycles. 
+Secondly, the frequency is not fixed for the cyclic variation so even if we identify the cyclicity we cannot use for future prediction as the future cyclic might be very different from the historic one.
+
+#### Time Series Component :-
+An Additive Model is given by :-
+$$y_t = S_t\  +T_t\ + R_t $$
+where $S_t$ is Seasonal Component, $T_t$ is the trend-cycle component, and $R_t$ is the remainder component, all at period t.
+Additve Decomposition is most appropriate if the magnitude of the seasonal fluctuations, or the variation around the trend-cycle, does not vary with the level of time series.
+
+A Multiplicative Model is given by :-
+$$y_t = S_t\ *T_t*\ R_t.$$
+Additve Decomposition is most appropriate if the magnitude of the seasonal fluctuations, or the variation around the trend-cycle, appears to be proportional with the level of time series.
+
+An alternative to multiplicative model is to transform the data to make it stable over time and then use a additive decomposition.When a log transformation has been used, this is equivalent to using a multiplicative decomposition because
+$$y_t = S_t\ *T_t*\ R_t => logy_t= logS_t + logT_t + logR_t.$$
+
