@@ -27,6 +27,75 @@ A Multiplicative Model is given by :-
 $$y_t = S_t\ *T_t*\ R_t.$$
 Additve Decomposition is most appropriate if the magnitude of the seasonal fluctuations, or the variation around the trend-cycle, appears to be proportional with the level of time series.
 
-An alternative to multiplicative model is to transform the data to make it stable over time and then use a additive decomposition.When a log transformation has been used, this is equivalent to using a multiplicative decomposition because
+An alternative to multiplicative model is to transform the data to make it stable over time and then use a additive decomposition. When a log transformation has been used, this is equivalent to using a multiplicative decomposition because
 $$y_t = S_t\ *T_t*\ R_t => logy_t= logS_t + logT_t + logR_t.$$
+
+Sometimes we are not interested in seasonlity in the dataset. If we remove the seasonal component from the original data, the resulting values are the "seasonally adjusted" data.
+
+For additive Model, seasonally adjusted data is $y_t - S_t$.
+For Multiplicative Model, seasonally adjusted data is $y_t/S_t$.
+
+Seasonally adjusted series contains the remainder and the trend-cycle component. Therefore, they are not smooth. If the purpose is to look for turning points in a series, and interpret any changes in direction, then it is better to use the trend-cycle component rather than the seasonally adjusted data.
+
+#### Moving Averages Smoothing:-
+One way of decomposing a time series is to use moving average method to estimate trend-cycle. 
+A moving average of order m can be written as 
+$$\hat T_t = \frac{1}{m} \sum_{j = -k}^{k}y_{t+j},\ where\  m = 2k+1$$
+The estimate of the time-cycle component at time t is the average of k period within time t. 
+Observations that are nearby in time are also likely to be close in value. Therefore, the avergae eliminates some of the randomness in the data, leaves a smooth trend-cycle component.
+
+Example :-Annual Electricity sales data
+```{r}
+library(fpp2)
+autoplot(elecsales, series = "Data") +
+  autolayer(ma(elecsales, 5), series = "5-MA") +
+  xlab("year") + ylab("GWh") +
+  ggtitle("Annual Electricity Sales Data") +
+  scale_colour_manual(values = c("Data" = "grey50", "5-MA" ="red"),
+                      breaks = c("Data", "5-MA"))
+```
+
+We can see that there is no estimation for the starting 2 and ending 2 years because we do not have 2 observations on the either side.
+
+The order of the moving average decides the smoothness of the trend-cycle estimate. As we increase the order we are making the curve smoother. 
+We usually choose the order of the MA as an odd number, so that the moving averages are symmetric. 
+
+#### Moving Average of moving averages :-
+We can also take moving average of the moving avergaes. Someone might wants to do that to make even-order moving average symmetric.
+
+```{r}
+beer2 = window(ausbeer, start = 1992)
+ma4 = ma(beer2, order = 4, centre = FALSE)
+ma2X4 = ma(beer2, order = 4, centre = TRUE)
+ma2X4
+```
+
+Moving Averages can be used to trend-cycle from seasonal data. For eg. in a 2 * 4 MA :-
+$$\hat T_t = \frac{1}{8}y_{t-2} + \frac{1}{4}y_{t-1} +\frac{1}{4}y_{t} +\frac{1}{4}y_{t+1} + \frac{1}{8}y_{t+2}$$
+When applied to quarterly data, each quarter of the year is given equal weight as first and last terms apply to the same quarter in consecutive quarter. Consequently, the seasonal variation will be averaged out and the resulting value will have little or no seasonal variation remaining.
+
+If the seasonal period m is even, then we use 2 * m MA or (m+1) where all observations take the weight 1/m, except for the first and last terms which take weights 1/(2m) to estimate the trend-cycle variation, and if the period is odd then we can choose m-MA.
+
+Other choices might result in trend-cycle estimate to be effected by seasonal variation.
+
+Electrical Equipment Manufacturing :-
+```{r}
+autoplot(elecequip, series = "Data") +
+  autolayer(ma(elecequip, 12), series = "12-MA") +
+  xlab("Year") + ylab("New Order Index") +
+  ggtitle("Electrical Equipment Manufacturing") +
+  scale_color_manual(values = c("Data" = "grey50", "12-MA" = "red"),
+                     breaks = c("Data","12-MA"))
+```
+
+Notice that the red line captures the trend-cycle effect without fluctuations. This shows the effectiveness of the method.
+
+#### Weighted Moving Average :-
+Combinations of moving averages result in weighted moving averages. For example, the 2×4-MA discussed above is equivalent to a weighted 5-MA with weights given by $[\frac{1}{8}, \frac{1}{4} , \frac{1}{4} , \frac{1}{4},\frac{1}{8}]$. In general, a weighted m-MA can be written as
+$$\hat T_t = \sum_{j = -k}^{k} a_j\ y_{t+j},$$
+where k = (m-1)/2, and a's are the weights.It is important that the weights all sum to one and that they are symmetric so that $a_j=a_{−j}$.
+
+A major advantage of the weighted moving average is that the trend-cycle estimate is smooth. Instead of observations entering and leaving the calculations at full weight, their weight slowly increase or decrease as they enter and leave the calculations.
+
+
 
