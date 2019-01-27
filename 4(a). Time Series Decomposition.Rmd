@@ -33,6 +33,7 @@ $$y_t = S_t\ *T_t*\ R_t => logy_t= logS_t + logT_t + logR_t.$$
 Sometimes we are not interested in seasonlity in the dataset. If we remove the seasonal component from the original data, the resulting values are the "seasonally adjusted" data.
 
 For additive Model, seasonally adjusted data is $y_t - S_t$.
+
 For Multiplicative Model, seasonally adjusted data is $y_t/S_t$.
 
 Seasonally adjusted series contains the remainder and the trend-cycle component. Therefore, they are not smooth. If the purpose is to look for turning points in a series, and interpret any changes in direction, then it is better to use the trend-cycle component rather than the seasonally adjusted data.
@@ -96,6 +97,110 @@ $$\hat T_t = \sum_{j = -k}^{k} a_j\ y_{t+j},$$
 where k = (m-1)/2, and a's are the weights.It is important that the weights all sum to one and that they are symmetric so that $a_j=a_{−j}$.
 
 A major advantage of the weighted moving average is that the trend-cycle estimate is smooth. Instead of observations entering and leaving the calculations at full weight, their weight slowly increase or decrease as they enter and leave the calculations.
+
+#### Classical Decomposition :-
+In classical decomposition, we assume that the seasonal component is constant from year to year. 
+There are 2 kind of decomposition :- Additive and Multiplicative.
+
+**1. Additive Decomposition :- **
+**1.** If m(seasonal period) is an even number, compute the trend-cycle component $\hat T_t$ using a 2*m-MA. If m is odd, compute the trend-cycle component $\hat T_t$ using an m-MA.
+
+**2.** Calculate the de-trended series: $y_t - \hat T_t$.
+
+**3.** To estimate the seasonal component for each season, simply average the detrended values for that season. These seasonal component values are then adjusted to ensure that they add to zero. The seasonal component is obtained by stringing together these monthly values, and then replicating the sequence for each year of data. This gives $\hat S_t$.
+
+**4.** The remainder component is calculated by subtracting the estimated seasonal and trend-cycle components: 
+$\hat R_t = y_t − \hat T_t − \hat S_t$.
+
+**2. Multiplicative Decomposition :- **
+**1.** If m(seasonal period) is an even number, compute the trend-cycle component $\hat T_t$ using a 2*m-MA. If m is odd, compute the trend-cycle component $\hat T_t$ using an m-MA.
+
+**2.** Calculate the de-trended series: $y_t / \hat T_t$.
+
+**3.** To estimate the seasonal component for each season, simply average the detrended values for that season. These seasonal component values are then adjusted to ensure that they add to zero. The seasonal component is obtained by stringing together these monthly values, and then replicating the sequence for each year of data. This gives $\hat S_t$.
+
+**4.** The remainder component is calculated by subtracting the estimated seasonal and trend-cycle components: 
+$\hat R_t = y_t / (\hat T_t  \hat S_t)$.
+
+```{r}
+elecequip %>% decompose(type = "multiplicative") %>%
+  autoplot() + xlab("Year") +
+  ggtitle("Classical Multiplicative Decomposition of Electricity Price Index")
+```
+
+We can see that classical approach works quite well in this case except in the year 2009 where we can see a lot of negetive remainders.
+
+**Disadvantages of Classical Decomposition :-** 
+1. The trend-cycle estimate tends to over-smooth rapid rises and falls in the data.
+
+2. Classical decomposition methods assume that the seasonal component repeats from year to year. For many series, this is a reasonable assumption, but for some longer series it is not.
+
+3. The estimate of the trend-cycle is unavailable for the first few and last few observations. 
+
+4. Occasionally, the values of the time series in a small number of periods may be particularly unusual. The classical method is not robust to these kinds of unusual values.
+
+#### X11 Decomposition :-
+Another method to decompose a time series is the X11 method. This method overcomes the drawback of the classical method of decomposition. In particular, trend-cycle estimates are available for all observations including the end points, and the seasonal component is allowed to vary slowly over time.
+X11 also has some sophisticated methods for handling trading day variation, holiday effects and the effects of known predictors.
+
+```{r}
+library(seasonal)
+elecequip %>% 
+  seas(x11 = "") -> fit
+autoplot(fit) + 
+  ggtitle("X11 decomposition of electrical equipment index")
+```
+
+We can see that the X11 method has captured the sudden fall in 2009 much better. Also, it has allowed the seasonal components to vary over the years.
+
+Given the output from the seas() function, seasonal() will extract the seasonal component, trendcycle() will extract the trend-cycle component, remainder() will extract the remainder component, and seasadj() will compute the seasonally adjusted time series.
+```{r}
+autoplot(elecequip, series = "Data") +
+  autolayer(trendcycle(fit), series = "Trend-Cycle") +
+  autolayer(seasadj(fit), series = "Seasonally Adjusted") +
+  xlab("Year") + ylab("New Order Index") +
+  ggtitle("Electrical equipment manufacturing") +
+  scale_colour_manual(values = c("grey", "blue", "red"),
+                      breaks = c("Data","Seasonally Adjusted","Trend-Cycle"))
+```
+
+It can be useful to use seasonal plots and seasonal sub-series plots of the seasonal component. These help us to visualise the variation in the seasonal component over time.
+```{r}
+fit %>% seasonal() %>% ggsubseriesplot() + ylab("Seasonal")
+```
+
+#### SEATS Decomposition :-
+“SEATS” stands for “Seasonal Extraction in ARIMA Time Series”. This is just another way of decomposition. The procedure works only with quarterly and monthly data.
+
+```{r}
+elecequip %>% 
+  seas() %>%
+  autoplot() + 
+  ggtitle("SEATS decomposition of electrical equipment index")
+```
+
+#### STL Decomposition :-
+"Seasonal and Trend decomposition using Loess", while Loess is a method for estimating nonlinear relationships.
+
+STL has several advantages over the classical, SEATS and X11 decomposition methods:
+
+**1.**Unlike SEATS and X11, STL will handle any type of seasonality, not only monthly and quarterly data.
+
+**2.**The seasonal component is allowed to change over time, and the rate of change can be controlled by the user.
+
+**3.**The smoothness of the trend-cycle can also be controlled by the user.
+
+**4.**It can be robust to outliers (i.e., the user can specify a robust decomposition), so that occasional unusual observations will not affect the estimates of the trend-cycle and seasonal components. They will, however, affect the remainder component.
+
+STL only provides facilities for additive decompositions. It is possible to obtain a multiplicative decomposition by first taking logs of the data, then back-transforming the components.
+
+```{r}
+elecequip %>% 
+  stl(t.window = 13, s.window = 13, robust = TRUE) %>% # periodic means that seasonal component is identical every year.
+  autoplot()
+```
+
+Both t.window and s.window should be odd numbers; t.window is the number of consecutive observations to be used when estimating the trend-cycle; s.window is the number of consecutive years to be used in estimating each value in the seasonal component.
 
 
 
