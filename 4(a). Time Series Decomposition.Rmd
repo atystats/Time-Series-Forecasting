@@ -202,5 +202,53 @@ elecequip %>%
 
 Both t.window and s.window should be odd numbers; t.window is the number of consecutive observations to be used when estimating the trend-cycle; s.window is the number of consecutive years to be used in estimating each value in the seasonal component.
 
+#### Measuring the strength of trend and seasonality :-
+For a strongly trended data, the seasonally adjusted data should have much more variation than the remainder component. Therefore, Var($R_t$)/Var($R_t + T_t$) should be relatively small. But for little or no trend, this variance will approximately be same.
 
+$$F_T = max(0,1- \frac{Var(R_t)}{Var(R_t + T_t)})$$
+This will give a measure of the strength of the trend between 0 and 1.
+
+The strength of seasonality is defined similarly, but with respect to the detrended data rather than the seasonally adjusted data:
+$$F_S = max(0,1- \frac{Var(R_t)}{Var(R_t + S_t)})$$
+
+#### Forecasting with Decomposition :-
+While decomposition is primarily useful for studying time series data, and exploring historical changes over time, it can also be used in forecasting.
+
+An additive model can be written as :-
+$$Y_t = \hat S_t + \hat A_t$$
+where $\hat A_t = \hat T_t + \hat R_t$ is the seasonally adjusted component.
+
+Similarly, a multiplicative model can be written as :-
+$$Y_t = \hat S_t  \hat A_t$$
+where $\hat A_t = \hat T_t\hat R_t$ is the seasonally adjusted component.
+
+We will forecast the "trend + remainder" and seasonal component seperately. 
+It is usually assumed that the seasonal component is unchanging, or changing extremely slowly, so it is forecast by simply taking the last year of the estimated component. In other words, a seasonal naïve method is used for the seasonal component.
+
+To forecast the seasonally adjusted component, any non-seasonal forecasting method may be used.
+For e.g.
+```{r}
+fit <- stl(elecequip, t.window = 13, s.window = "periodic", robust = TRUE)
+fit %>% seasadj() %>% naive() %>%
+  autoplot() + xlab("New Order Index") +
+  ggtitle("Naive forecasts of seasonality adjusted data")
+```
+
+The above graph shows the naive forecast on the seasonally adjusted data. We can reseasonalised the series by adding seasonal naive forecast.
+
+```{r}
+fit %>% forecast(method = "naive") %>% #method being used on the seasonally adjusted data
+  autoplot() +
+  ggtitle("Naive forecasts of seasonality adjusted data")
+```
+
+The prediction intervals shown in this graph are constructed in the same way as the point forecasts. That is, the upper and lower limits of the prediction intervals on the seasonally adjusted data are “reseasonalised” by adding in the forecasts of the seasonal component.
+
+A short cut approach for the same is
+```{r}
+fcast <- stlf(elecequip, method = "naive")
+autoplot(fcast)
+```
+
+The stlf() function uses mstl() to carry out the decomposition, so there are default values for s.window and t.window.
 
