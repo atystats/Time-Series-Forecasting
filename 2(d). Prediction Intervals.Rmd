@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Prediction Intervals :-
+### Prediction Intervals :-
 A prediction interval is an interval within which we expect $y_t$ to lie with a specified probability. Prediction intervals are required to understand how much uncertainity is associated with the point forecast.
 
 If the forecast errors are normally distributed, a 95% prediction interval is given by :-
@@ -20,10 +20,14 @@ where h is forecast horizon.
 2. Multi step prediction interval increase as the forecast horizon increase.
 
 The estimate of $σ_{h}$ for different methods are :-
-Mean Forecasts :- $σ \sqrt{1+1/T}$.
-Naive Forecasts :- $σ \sqrt{h}$.
-Seasonal Naive Forecasts :- $σ \sqrt{k +1}$.
-Drift Forecasts :- $σ \sqrt{h(1+h/T)}$.
+
+**Mean Forecasts :-** $σ \sqrt{1+1/T}$.
+
+**Naive Forecasts :-** $σ \sqrt{h}$.
+
+**Seasonal Naive Forecasts :-** $σ \sqrt{k +1}$.
+
+**Drift Forecasts :-** $σ \sqrt{h(1+h/T)}$.
 
 Prediction intervals for naive methods on Google Price index data
 ```{r}
@@ -36,7 +40,8 @@ It is clear that as we are moving up in the forecast horizon the prediction inte
 autoplot(naive(goog200))
 ```
 
-Bootstrap Prediction interval :- If the assumption of normal distribution of forecast error is  unreasonable, then we can use bootstrapping that only assumes that the forecast errors are uncorrelated.
+#### Bootstrap Prediction interval :- 
+If the assumption of normal distribution of forecast error is  unreasonable, then we can use bootstrapping that only assumes that the forecast errors are uncorrelated.
 
 Forecast error 
 $$e_t = y_t - \hat{y}_{t|t-1}$$
