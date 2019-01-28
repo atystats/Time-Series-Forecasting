@@ -8,14 +8,13 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-#########################################################################################################################################################################Residual diagnostic#########################################################
-####################################################################################################################
+### Residual Diagnostics
 
-Fitted Values :- 
+**Fitted Values :- **
 1. Each observation in a time series can be forecast using all previous observations. These values are called Fitted Values. 
 2. Fitted Values are often not the actual forecasts because any parameters involved in the forecasting method are estimated using all the available observation in the time series, including future observations. For e.g. Average Method and Drift Method. But in case of naive and seasonal naive, the forecast do not involve any parameter so the fitted values are actual forecasts.
 
-Residual :- Residual in a time series model is what is left over after fitting a model. 
+**Residual :-** Residual in a time series model is what is left over after fitting a model. 
 $$e_t = y_t - fitted(y_t)$$
 If a model fit the data accurately then,
 
@@ -60,17 +59,18 @@ The autocorrelation is not significant for any lag.
 
 From above graph it appears that naive method forecasts accounts for all available information.
 
-Portmanteau tests for autocorrelation :-
+#### Portmanteau tests for autocorrelation :-
 One issue with ACF plots is that we make an hypothesis for each of the lag and each test has some probability of giving a false result. If the value of h is large, then it is likely that atleast one of them gives wrong result.
 To overcome this we are going to test whether the first h autocorrelations are significantly different from what is expected from a white noise process. 
 
-Box - Pierce test :- 
+#### Box - Pierce test :- 
 $$ Q = T \sum_{k=1}^{h} r_{k}^{2}\  ,$$
 where h = maximum lag being considered.(usually h = 10 for non seasonal data, h = 2m for seasonal data with seasonal frequency m). The test is still not good if h is too large. So if the values are larger than T/5 use h = T/5.
 
 T = no. of observations.
 
-Ljung-Box test :- $$Q = T(T+2)  \sum_{k=1}^{h}(T-k)^{-1} r_{k}^{2}$$
+#### Ljung-Box test :- 
+$$Q = T(T+2)  \sum_{k=1}^{h}(T-k)^{-1} r_{k}^{2}$$
 If the autocorrelation comes with white noise then both Q follows chi square distribution with (h-K) degrees of freedom where K is the number of parameters in the model.
 
 ```{r}
@@ -87,34 +87,36 @@ All of the above analysis can be done using just one function.
 checkresiduals(naive(goog200))
 ```
 
-Forecast accuracy
+#### Forecast accuracy
 
 The size of the residuals is not a reliable indication of how large true forecast errors are likely to be. The accuracy of forecasts can only be determined by considering how well a model performs on new data that were not used when fitting the model.
 
 We divide the dataset in training data (80% usually) and test set (20% data). 
-Forecast error = $Actual(y_{T+h}) - forc(y_{T+h})$.
+
+**Forecast error** = $Actual(y_{T+h}) - forc(y_{T+h})$.
 Forecast error are different from residuals as the residuals are calculated on the training dataset.
 
-Mean absolute error : MAE :- mean(|$e_t$|).
+**Mean absolute error : MAE :-** mean(|$e_t$|).
 Root squared mean error : RMSE :- $\sqrt{mean(e_t^2)}$.
 
 A method that minimize MAE leads to forecast of the median and a method that minimise RMSE leads to the forecast of mean.
 
 The issue with MAE and RMSE is that the results are on same scale as of the data. So we cannot compare the accurancy of methods that are based on datasets of different units.
 
-Mean absolute percentage error : MAPE :- mean(|$p_t$|).
+**Mean absolute percentage error : MAPE :-** mean(|$p_t$|).
 where $p_t = 100e_t/y_t$.
 
-Disadvantge of using percentage error :- 
+**Disadvantge of using percentage error :- **
 1. Percentages are infinite or undefined for $y_t$ = 0 and having extreme values for $y_t$ close to zero.
 2. Percentage errors make sense only when the measurement is on interval scale not on the ratio scale because percentage errors assume that the measurement scale has a meaningful zero.
 3. Percentage error ususally put high penalty on the negative error than on positive error as there is always more possibility of making a positive error than making a negetive error.
 
 To solve these issues we might use symmetric MAPE(sMAPE)
-sMAPE :- mean( 200 * $|y_t - \hat{y}_t|/(y_t + \hat{y}_t)$ )
+
+**sMAPE :-** mean( 200 * $|y_t - \hat{y}_t|/(y_t + \hat{y}_t)$ )
 This still do not solve the issue mentioned in (1) above.
 
-Scaled Error :- To compare the forecast from different time series, we can use scaled error. For the non-seasonal data scaled error can be given as :-
+**Scaled Error :-** To compare the forecast from different time series, we can use scaled error. For the non-seasonal data scaled error can be given as :-
 $$q_j = \frac{e_j}{\frac{1}{T-1} \sum_{t=2}^{T} |y_t - \hat{y}_t|}$$
 The denominator is measuring the error from a naive forecast method. 
 1. $q_j$ is independent of units. 
@@ -122,7 +124,7 @@ The denominator is measuring the error from a naive forecast method.
 
 For the seasonal data scaled error can be given as :-
 $$q_j = \frac{e_j}{\frac{1}{T-m} \sum_{t=m+1}^{T} |y_t - \hat{y}_{t-m}|}$$
-Mean absolute scaled error (MASE) = mean(|$q_t$|).
+**Mean absolute scaled error (MASE)** = mean(|$q_t$|).
 
 We will see an example of this on Quarterly Beer Production data. 
 ```{r}
@@ -175,7 +177,7 @@ accuracy(googfc3, googtest)
 
 All the error measures shows that drift method gives the best forecast.
 
-Time Series Cross Validation :- In this method we do a series of tests each test contains one test observations and the preceeding that observation is the training set. This way we are not using any future observation for forecast.
+**Time Series Cross Validation :-** In this method we do a series of tests each test contains one test observations and the preceeding that observation is the training set. This way we are not using any future observation for forecast.
 Initial observations are not used for cross validation as the forecast on a small dataset is not reliable.
 
 ```{r}
@@ -203,7 +205,7 @@ data.frame(h = 1:8, MSE = mse) %>%
 The above shows how the forecast error is increasing as the forecast horizon is increasing.
 
 
-Excercise :-
+#### Excercise :-
 
 5). Australian Beer Data 
 The data is seasonal in nature. So, we are using seasonal naive forecast.
