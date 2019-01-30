@@ -14,7 +14,7 @@ There are 3 components of time series that we have discussed:-
 2. Seasonality.
 3. Cycles.
 
-When we decompose a time series, we usually combine the trend and cyclic variation. Cyclic variations are difficult to seperate out because first we are going to need a lot of data to find out the actual variation that is coming from cycles. 
+When we decompose a time series, we usually combine the trend and cyclic variation. Cyclic variations are difficult to seperate out because first we are going to need a lot of data to find out the actual variation that is coming from cycles.
 Secondly, the frequency is not fixed for the cyclic variation so even if we identify the cyclicity we cannot use for future prediction as the future cyclic might be very different from the historic one.
 
 #### Time Series Component :-
@@ -43,7 +43,7 @@ One way of decomposing a time series is to use moving average method to estimate
 A moving average of order m can be written as 
 $$\hat T_t = \frac{1}{m} \sum_{j = -k}^{k}y_{t+j},\ where\  m = 2k+1$$
 The estimate of the time-cycle component at time t is the average of k period within time t. 
-Observations that are nearby in time are also likely to be close in value. Therefore, the avergae eliminates some of the randomness in the data, leaves a smooth trend-cycle component.
+Observations that are nearby in time are also likely to be close in value. Therefore, the average eliminates some of the randomness in the data, leaves a smooth trend-cycle component.
 
 Example :-Annual Electricity sales data
 ```{r}
@@ -251,4 +251,191 @@ autoplot(fcast)
 ```
 
 The stlf() function uses mstl() to carry out the decomposition, so there are default values for s.window and t.window.
+
+#### Excercise :-
+1. Monthly sales for a product for Plastic Manufacturers 
+```{r}
+autoplot(plastics) +
+  xlab("Month") + ylab("") +
+  ggtitle("Sales of plastic product")
+```
+
+An increasing trend can be seen in the data with seasonal pattern as well. The pattern do not seems consistent for all the months.
+
+```{r}
+plastics %>% decompose(type = "multiplicative") %>%
+  autoplot() + xlab("Months") +
+  ggtitle("Sales of plastic product")
+```
+
+The results above confirms what we have observed in the time plot. 
+
+```{r}
+plastics %>% 
+  decompose(type = "multiplicative") -> fit
+autoplot(seasadj(fit))
+```
+
+Effect of outlier on decomposition.
+```{r}
+plastics_out = plastics
+plastics_out[20] = plastics[20] + 500
+plastics_out %>% 
+  decompose(type = "multiplicative") -> fit
+autoplot(seasadj(fit))
+```
+
+As we can see that the classical decomposition assumes the constant seasonal effect, the seasonality will not be effected by the outlier but the outlier can be seen in the seasonal adjusted data.
+
+```{r}
+fit %>% autoplot()
+```
+
+As we can see that the outlier has shifted the trend a bit. Also the pattern of the seasonality has also changed a bit.
+
+```{r}
+plastics_out = plastics
+plastics_out[56] = plastics[56] + 500
+plastics_out %>% 
+  decompose(type = "multiplicative") -> fit
+autoplot(seasadj(fit))
+```
+
+Having an outlier in the end also won't make any difference because the seasonal variation is constant. 
+
+```{r}
+fit %>% autoplot()
+```
+
+Adding the outlier has not effected trend much as we are not giving a predition for last few values anyway. The outlier seems to have little effect on seasanol pattern as well.
+
+2. Retail Time Series Data :-
+```{r}
+retaildata = readxl::read_excel("/Users/atyagi/Desktop/Time Series Forecasting/Time-Series-Forecasting/Time_series_data/retail.xlsx",skip =1)
+myts = ts(retaildata[,"A3349873A"], start = c(1984,4), frequency = 12)
+autoplot(myts)
+```
+
+The series has an overall increasing increasing trend and also has a seasonal pattern.
+```{r}
+myts %>% seas(x11 = "") %>% autoplot()
+
+```
+
+The variance in the seasonality is decreasing with time. Also, some outlier can be seen in the remainder as well like in year 1992, 1997, 2003. Other then that the X11 decomposition works quite well for the data.
+
+3. Monthly Canadian gas production
+```{r}
+autoplot(cangas) +
+  xlab("Year") +
+  ggtitle("Monthly Canadian gas production")
+ggseasonplot(cangas)
+ggsubseriesplot(cangas)
+```
+
+Seasonal pattern with trend can be seen with a constant trend between 1973 to 1987.
+The gas production amount increased in winter and decreased in summer. Maybe the cold weather in winter increased the demand for the gas that the production amount increased. But the production amount also increased in summer as time went on. Maybe it happended because the demand for electricity to run air conditioners increased over time.
+
+```{r}
+cangas %>% 
+  stl(t.window = 13, s.window = 13, robust = TRUE) -> fit
+autoplot(fit)
+```
+
+We are selecting s.window manually because the seasonal pattern is changing so much in variation. A smaller value of s.window will it to change more frequently.
+We can see that the remainder has high variance where the seasonality had a high variance. This shows that the additive decomposition might not be a good choice which stl function uses.
+```{r}
+  autoplot(seasadj(fit)) +
+  xlab("Year") + ylab("") +
+  ggtitle("Canadian gas Production") 
+  
+```
+
+```{r}
+cangas %>% 
+  seas(x11="") -> fit
+autoplot(fit)
+```
+
+The remainder is smaller than stl function. As we are using the multiplicative method, the seasonality is decresing first then increasing and then decreasing again.
+we can notice when the variance of the time series is changing little, the additive model is giving us low error but when the seasonality changing variation, then the multiplicative model performing better.
+```{r}
+  autoplot(seasadj(fit)) +
+  xlab("Year") + ylab("") +
+  ggtitle("Canadian gas Production") 
+```
+
+4.Australian quarterly clay brick production.
+```{r}
+autoplot(bricksq) +
+  xlab("Year") +
+  ggtitle("Australian quarterly clay brick production")
+```
+
+The data shows an increasing trend and then a constant trend. Seasonality seems to have constant variation except there are few outlier.
+We are going to try both the examples.
+```{r}
+bricksq %>% 
+  stl(t.window = 5, s.window = "periodic", robust = TRUE) -> fit.constant
+autoplot(fit.constant)
+```
+
+```{r}
+bricksq %>% 
+  stl(t.window = 5, s.window = 5, robust = TRUE) -> fit.change
+  autoplot(fit.change)
+```
+
+We can see that when we are using changing seasonality, it also capturing the effect of outlier in 1975. 
+
+```{r}
+autoplot(seasadj(fit.constant), series = "Constant Seas") +
+  autolayer(seasadj(fit.change), series = "Change Seas") +
+  xlab("Year") +
+  ggtitle("Australian quarterly clay brick production") +
+  scale_color_manual(values = c("Red","Blue"),
+                     breaks = c("Constant Seas","Change Seas"))
+```
+
+As can be seen that the constant seasonality results in more peaks and troughs but it also do not pick the effect of intervention variables which should be explained seperately.
+
+```{r}
+fit.change %>% seasadj() %>% naive() %>%
+  autoplot()
+```
+
+```{r}
+bricksq %>% stlf(method = "naive") %>% autoplot() +
+  xlab("Years")
+```
+
+```{r}
+bricksq %>% stlf(method = "naive") -> fit
+checkresiduals(fit)
+```
+
+The residuals are increasing in size with time. Also, they are correlated with each other. Maybe if a method that use bigger window in estimating trend reduces that.
+
+5. Sales of printing and writing paper
+```{r}
+autoplot(writing)
+```
+
+The data has an increasing trend with seasonality. Seasonality seems to be constant over time.
+A drift method work better for estimatinf the trend-cycle component.
+```{r}
+writing %>% stlf(method = "rwdrift") %>% autoplot()
+```
+
+6. Sales for a souvenir shop
+```{r}
+autoplot(fancy) +
+  xlab("year") +
+  ggtitle("Sales for a souvenir shop")
+```
+
+The seasonlity seems to increase in size over time. We need to use Box-Cox transformation to control variacne as well.
+```{r}
+fancy %>% stlf(method = "rwdrift", lambda = BoxCox.lambda(fancy)) %>% autoplot(PI = FALSE) 
+```
 
