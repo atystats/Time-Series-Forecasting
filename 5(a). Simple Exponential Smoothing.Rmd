@@ -1,0 +1,23 @@
+---
+title: "5(a). Simple Exponential Smoothing"
+author: "Ankit"
+date: "1/31/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Simple Exponential Smoothing :-
+Simple exponential smoothing method is suitable for the data that do not have any clear trend or seasonality. For eg. Annual oil production in Saudi Arabia
+```{r}
+oildata <- window(oil, start = 1996)
+autoplot(oildata) +
+  xlab("Year") + ylab("Oil(million of tonnes)")
+```
+
+The above timeplot do not shows any clear trending behaviour or seasonality.
+
+
+
