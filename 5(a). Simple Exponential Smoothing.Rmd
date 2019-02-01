@@ -17,7 +17,7 @@ autoplot(oildata) +
   xlab("Year") + ylab("Oil(million of tonnes)")
 ```
 
-The above timeplot do not shows any clear trending behaviour or seasonality.
+The above timeplot do not shows any clear trending behaviour or seasonality. However, there is a rise in last few years that might suggest a trend. Average and Naive method are some simple forecasting methods that can be applied to this kind of data. 
 
 
 
