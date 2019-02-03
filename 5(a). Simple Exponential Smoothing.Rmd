@@ -42,7 +42,7 @@ Substituting the value of forecasts, we can drive to
 $$\hat y_{T+1|T} = \sum_{j =0}^{T-1}α(1-α)^jy_{T-j} + (1-α)^Tl_o $$
 This is called **Weighted Average Form**.
 
-###### Component Form :-
+#### Component Form :-
 Component form representations of exponential smoothing methods comprise a forecast equation and a smoothing equation for each of the components included in the method. For simple exponential smoothing, the only component included is the level.
 
 **Forecast Equation :- ** $\hat y_{t+h|t} = l_t$.
@@ -53,6 +53,31 @@ where $l_t$ will gives us the level of the time series at time t. Setting h = 1 
 
 Simple exponential smoothing has a “flat” forecast function. That is, all forecasts take the same value, equal to the last level component.
 
+#### Optimisation :-
+The application of exponential smoothing  requires the smoothing paramters and the initial value to be choosen(α and $l_o$).
 
+The unknown paramters and the initial value of the exponential smoothing can be estimated by minimising SSE.
+$$SSE = \sum_{t = 1}^{T}(y_t - \hat y_t)^2$$
+Now, unlike regression where we have formulas for coefficient that minimise the SSE, this involves a non-linear minimisation problem, and we need to use an optimisation tool to solve it.
+```{r}
+oildata = window(oil,start = 1996)
 
+fc = ses(oildata,h =5)
+fc$model
+```
 
+This gives the value of α = 0.8339 and initial value to be 446.6.
+
+```{r}
+autoplot(fc) +
+  autolayer(fitted(fc), series = "Fitted") +
+  xlab("Year") + ylab("Oil(million of tonnes)")
+```
+
+The large value of α in this example is reflected in the large adjustment that takes place in the estimated level $l_t$ at each time. A smaller value of α would lead to smaller changes over time, and so the series of fitted values would be smoother.
+
+```{r}
+fc
+```
+
+We can also see that the prediction are very high in this case which shows there is considerabe uncertainity in the future oil value.
