@@ -12,12 +12,47 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Simple Exponential Smoothing :-
 Simple exponential smoothing method is suitable for the data that do not have any clear trend or seasonality. For eg. Annual oil production in Saudi Arabia
 ```{r}
+library(fpp2)
 oildata <- window(oil, start = 1996)
 autoplot(oildata) +
   xlab("Year") + ylab("Oil(million of tonnes)")
 ```
 
 The above timeplot do not shows any clear trending behaviour or seasonality. However, there is a rise in last few years that might suggest a trend. Average and Naive method are some simple forecasting methods that can be applied to this kind of data. 
+
+Using the Naive method, all future forecasts are equal to the last observed value of the series, 
+$$\hat y_{T+h|T} = y_T, for h = 1,2,3....$$
+This can be thought of as a weighted average where all the weights are given to the last observations.
+
+Using the average method, all future forecasts are the average of all the available observations.
+$$\hat y_{T+h|T} = \frac{1}{T} \sum_{t = 1}^{T} y_t,$$
+Hence, the average is giving all the observations equal weights.
+
+Simple exponential smoothing works in between these 2 methods. It attches larger weights to more recent observations than to the observations in distant past. Forecasts are calculated using weighted averages, where the weights decrease exponentially as observations come from further in the past.
+
+$$\hat y_{T+h|T} = αy_T + α(1-α)y_{T-1} + α(1-α)^2 y_{T-2} +......, where \ 0\leα\le1 $$
+α is called the smoothing parameter. The rate at which the weights decrease is controlled by parameter α.
+
+If α is small then we are giving more weights to observations in distant past. 
+If α is large (closer to 1), then more weight is given to more recent observations. For α = 1, the forecasts are equal to naive forecasts.
+
+Let the first fitted value be denoted by $l_o$. The forecast at time T+1 is equal to the weighted average of the most recent observation $y_T$ and the previous forecast $\hat y_{T|T-1}$.
+$$\hat y_{T+1|t} = αy_t + (1-α) \hat y_{T|T-1},$$
+Substituting the value of forecasts, we can drive to
+$$\hat y_{T+1|T} = \sum_{j =0}^{T-1}α(1-α)^jy_{T-j} + (1-α)^Tl_o $$
+This is called **Weighted Average Form**.
+
+###### Component Form :-
+Component form representations of exponential smoothing methods comprise a forecast equation and a smoothing equation for each of the components included in the method. For simple exponential smoothing, the only component included is the level.
+
+**Forecast Equation :- ** $\hat y_{t+h|t} = l_t$.
+
+**Smoothing equation :- ** $l_t = αy_t + (1-α)l_{t-1}$.
+
+where $l_t$ will gives us the level of the time series at time t. Setting h = 1 gives the fitted values, while setting t = T gives the true forecasts beyond the training data.
+
+Simple exponential smoothing has a “flat” forecast function. That is, all forecasts take the same value, equal to the last level component.
+
 
 
 
