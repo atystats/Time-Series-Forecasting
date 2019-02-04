@@ -28,7 +28,7 @@ $b_t$ = estimate of trend at time t.
 As with simple exponential smoothing, the level $l_t$ is the weighted average of the observation $y_t$ and the one-step training forecast of for time t, here given by $l_{t-1} + b_{t-1}$.
 The trend component is the weighted average of estimated trend at time t based on $l_t - l_{t-1}$ and previous estimate of trend $b_{t-1}$.
 
-Example :- Air Passanger data
+**Example :- Air Passanger data**
 ```{r}
 library(fpp2)
 autoplot(window(ausair, start = 1990)) +
@@ -36,8 +36,41 @@ autoplot(window(ausair, start = 1990)) +
 ```
 
 The timeplot shows that there is an increasing trend in the data.
+The smoothing parameters α, $β^*$, $l_o$, $b_o$ are estimated by minimising the SSE for the one-step training errors.
+We are fitting a holt's method on this data.
+```{r}
+air = window(ausair, start = 1990)
+fc = holt(air, h = 5)
+fc$model
+```
+
+The value of α = 0.8302.
+$β^*$ = 0.0001.
+The very small value of $β^*$ means that slope hardly changes over time.
+
+The Holt's method assumes that the trend is constantly increasing or decreasing with time. This might leads to over forecast for a longer forecast horizons.
+
+###Damped Trend Methods :-
+This method introduces a parameter(ϕ) that "dampens" the trend to a flat line sometime in the future.
+
+**Forecast Equation :- ** $\hat y_{t+h|t} = l_t + (ϕ + ϕ^2 + ϕ^3 + ...... ϕ^h)b_t$.
+
+**Level Equation :- ** $l_t = αy_t + (1-α)(l_{t-1} + ϕb_{t-1})$.
+
+**Trend Equation :- ** $b_t = β^* (l_t-t_{t-1}) + (1-β^*)ϕb_{t-1}$.
+
+If ϕ = 1, the method is equal to Holt's linear method. For values between 0 and 1, ϕ dampens the trend so that it approaches a constant some time in the future. In fact, the forecasts converge to $l_T + ϕb_T/(1-ϕ)$ as h -> ∞.for any value 0<ϕ<1.This means that short-run forecasts are trended while long-run forecasts are constant.
 
 ```{r}
-autoplot
+fc = holt(air,h =15)
+fc2 = holt(air, damped = TRUE, phi = 0.9, h = 15)
+autoplot(air) +
+  autolayer(fc, series = "Holt's Method", PI = FALSE) +
+  autolayer(fc2, series = "Damped Holt's Method", PI = FALSE) +
+  xlab("Year") + ylab("Air passengers in Australia (millions)") +
+  ggtitle("Forecasts from Holt's method") +
+  guides(colour = guide_legend(title = "Forecasts"))
 ```
+
+The red line shows the forecast using dampning effect and blue one shows forecast with no dampning effect.
 
