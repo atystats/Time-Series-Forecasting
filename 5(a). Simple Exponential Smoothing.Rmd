@@ -80,4 +80,4 @@ The large value of α in this example is reflected in the large adjustment that 
 fc
 ```
 
-We can also see that the prediction are very high in this case which shows there is considerabe uncertainity in the future oil value.
+We can also see that the prediction are very high in this case which shows there is considerable uncertainity in the future oil value.
