@@ -74,3 +74,43 @@ autoplot(air) +
 
 The red line shows the forecast using dampning effect and blue one shows forecast with no dampning effect.
 
+Now we will compare the forecast accuracy 3 methods, Simple Exponential Smoothing, Holt's Method and Damped Holt's method.
+```{r}
+autoplot(livestock) +
+  xlab("year") + ggtitle("Livestock, sheep in Asia (millions)")
+```
+
+```{r}
+e1 = tsCV(livestock, ses, h = 1)
+e2 = tsCV(livestock, holt, h = 1)
+e3 = tsCV(livestock, holt, damped = TRUE, h = 1)
+
+print ("Compare MSE")
+print(c('CV error from SES :-', mean(e1^2, na.rm = TRUE)))
+print(c('CV error from Holt :-', mean(e2^2, na.rm = TRUE)))
+print(c('CV error from Damped Holt :-', mean(e3^2, na.rm = TRUE)))
+
+print ("Compare MAE")
+print(c('CV error from SES :-', mean(abs(e1), na.rm = TRUE)))
+print(c('CV error from Holt :-', mean(abs(e2), na.rm = TRUE)))
+print(c('CV error from Damped Holt :-', mean(abs(e3), na.rm = TRUE)))
+
+```
+
+Damped Holt's method seems to gives best result on MSE and MAE.
+
+```{r}
+fc = holt(livestock, damped = TRUE)
+fc[["model"]]
+```
+
+Slope parameter is close to zero that means slope of trend is not changing with time.
+level parameter is close to one, showing that level reacts strongly to each new observations.
+
+```{r}
+autoplot(fc) +
+  xlab("Year") + ggtitle("Livestock, sheep in Asia (millions)")
+```
+
+The wide prediction interval reflecting the variation in the historical data but the forecast looks reasonable.
+
