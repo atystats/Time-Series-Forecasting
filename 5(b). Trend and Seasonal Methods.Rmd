@@ -114,3 +114,13 @@ autoplot(fc) +
 
 The wide prediction interval reflecting the variation in the historical data but the forecast looks reasonable.
 
+### Holt-Winters' Seasonal method :-
+This method extends Holt's method to capture seasonality. Now we have 3 smoothing equations for level, trend and seasonality. 
+
+There are 2 variations in this method. The additive model is preferred when the seasonal variations are roughly constant through the series, while the multiplicative method is preferred when the seasonal variations are changing proportional to the level of the series. 
+
+With the additive method, the seasonality is expressed in absolute terms in the scale of the observed time series. The seasonal component in each year will sum up to zero. With the multiplicative method, the seasonal component are expressed in relative terms. The seasonal component in each year will sum up to m(frequency).
+
+
+
+
