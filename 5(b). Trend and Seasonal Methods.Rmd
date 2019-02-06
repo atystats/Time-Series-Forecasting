@@ -119,8 +119,54 @@ This method extends Holt's method to capture seasonality. Now we have 3 smoothin
 
 There are 2 variations in this method. The additive model is preferred when the seasonal variations are roughly constant through the series, while the multiplicative method is preferred when the seasonal variations are changing proportional to the level of the series. 
 
-With the additive method, the seasonality is expressed in absolute terms in the scale of the observed time series. The seasonal component in each year will sum up to zero. With the multiplicative method, the seasonal component are expressed in relative terms. The seasonal component in each year will sum up to m(frequency).
+With the additive method, the seasonality is expressed in absolute terms in the scale of the observed time series. The seasonal component in each year will sum up to zero. 
+With the multiplicative method, the seasonal component are expressed in relative terms. The seasonal component in each year will sum up to m(frequency).
 
+##### Additive Method :-
+The component form of the additive method is :-
 
+**Forecast Equation :- ** $\hat y_{t+h|t} = l_t + hb_t + s_{t+h-m(k+1)}$.
 
+**Level Equation :- ** $l_t = α(y_t - s_{t-m}) + (1-α)(l_{t-1} + b_{t-1})$.
 
+**Trend Equation :- ** $b_t = β^* (l_t-t_{t-1}) + (1-β^*)b_{t-1}$.
+
+**Seasonality Equation :- ** $s_t = γ(y_t - l_{t-1} - b_{t-1}) + (1-γ)s_{t-m}$
+
+where k = (h-1)/m, which ensures that the estimates of the seasonal indices for forecasting come from the final year of the sample. The level shows the weighted average between the seasonal adjusted observation($y_t - s_{t-m}$) and the non-seasonal forecasts ($l_{t-1} + b_{t-1}$) for time t.  
+Trend equation shows the weighted average of estimated trend at t and estimate of the prevoius trend.
+Seasonality is the weighted average of current seasonal index and seasonal index of same season last year.
+
+##### Mutiplicative Method :-
+The component form of the multiplicative method is :-
+
+**Forecast Equation :- ** $\hat y_{t+h|t} = (l_t + hb_t) * s_{t+h-m(k+1)}$.
+
+**Level Equation :- ** $l_t = α\frac{y_t}{s_{t-m}} + (1-α)(l_{t-1} + b_{t-1})$.
+
+**Trend Equation :- ** $b_t = β^* (l_t-t_{t-1}) + (1-β^*)b_{t-1}$.
+
+**Seasonality Equation :- ** $s_t = γ \frac{y_t}{l_{t-1} + b_{t-1}} + (1-γ)s_{t-m}$
+
+**Example - International tourists visitor nights in Australia **
+
+```{r}
+aust = window(austourists, start = 2005)
+fit1 = hw(aust, seasonal = "additive")
+fit2 = hw(aust, seasonal = "multiplicative")
+autoplot(aust) +
+  autolayer(fit1, series = "HW additive forecasts", PI = FALSE) +
+  autolayer(fit2, series = "HW multiplicative forecasts", PI = FALSE) +
+  xlab("Year") + ylab("Visitor Nights (millions)") +
+  ggtitle("International visitor nights in Australia") +
+  guides(colour = guide_legend(title = "Forecasts"))
+```
+
+The data shows that the seasonality is proportional to the level. A multiplicative model should work better than additive model. The forecasts also shows that the additive model is giving constant seasonality but seasonality from mutiplicative approach is increasing in size.
+
+```{r}
+fit1[["model"]]
+fit2[["model"]]
+```
+
+We can see that the AIC, AICc and BIC are smaller for multiplicative model.
