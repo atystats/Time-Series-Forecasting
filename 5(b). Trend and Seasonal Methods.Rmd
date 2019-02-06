@@ -170,3 +170,28 @@ fit2[["model"]]
 ```
 
 We can see that the AIC, AICc and BIC are smaller for multiplicative model.
+
+##### Holt-Winters' damped method :-
+We can use dampning in both additive and multiplicative method, the Holt-Winters' damped method applies dampning on both trend and seasonality.
+
+**Multiplicative Model :-**
+
+**Forecast Equation :- ** $\hat y_{t+h|t} = [l_t + (ϕ + ϕ^2 + ϕ^3 + ...... ϕ^h)b_t] s_{t+h -m(k+1)}$
+
+**Level Equation :- ** $l_t = α \frac{y_t}{s_{t-m}} + (1-α)(l_{t-1} + ϕb_{t-1})$.
+
+**Trend Equation :- ** $b_t = β^* (l_t-t_{t-1}) + (1-β^*)ϕb_{t-1}$.
+
+**Seasonality Equation :- ** $s_t = γ \frac{y_t}{l_{t-1} + ϕb_{t-1}} + (1-γ)s_{t-m}$
+
+**Example :-**
+
+```{r}
+fc = hw(subset(hyndsight, end = length(hyndsight)-35),
+        damped = TRUE, seasonal = "multiplicative", h = 35)
+autoplot(hyndsight) +
+  autolayer(fc, series = "HW multi damped", PI = FALSE) +
+  guides(colour = guide_legend(title = "Forecasts"))
+```
+
+Clearly the model has identified the weekly seasonal pattern and the increasing trend at the end of the data, and the forecasts are a close match to the test data.
