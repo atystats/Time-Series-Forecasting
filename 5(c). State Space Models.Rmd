@@ -1,0 +1,76 @@
+---
+title: "5(c). State Space Models"
+author: "Ankit"
+date: "2/12/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### State Space Model :-
+A statistical model is a stochastic (or random) data generating process that can produce an entire forecast distribution.
+
+Exponential smoothing methods that we have seen till now can produce only the point foreacasts but the state space model can produce the same forecasts with forecasts distribution as well.
+
+Each model consists of a measurement equation that describes the observed data, and some state equations that describe how the unobserved components or states (level, trend, seasonal) change over time. Hence, these are referred to as state space models.
+
+A state space model is represented as ETS(Error, Trend, Seasonal). 
+The possibility for each component are :- Error= {A, M}, Trend= {N, A, $A_d$}, Seasonal= {N, A, M}.
+
+##### ETS(A,N,N) :- Simple Exponential Smoothing with additive error.
+
+The component form of the simple exponential smoothing is 
+
+**Forecast Equation :- ** $\hat y_{t+1|t} = l_t$.
+
+**Smoothing equation :- ** $l_t = αy_t + (1-α)l_{t-1}$.
+
+The above equation can be written as 
+$$=> l_{t-1} + α(y_t - l_{t-1})$$
+$$=> l_{t-1} + α(y_t - \hat y_{t|t-1})$$
+$$=> l_{t-1} + αe_t$$
+where $e_t$ is the residual at time t.
+The training data error leads to the adjustment in estimated level throughout the smoothing process.
+
+We can also write $y_t = l_{t-1} + e_t$ so that each observation can be presented as previous level plus error. By defining the distribution of errors we can make this into innovation state space model. 
+For a model with additive errors, we assume the errors to be normally distributed with mean 0 and a constant variance (or a white noise process).
+
+The equation of the model are :-
+$$y_t = l_{t-1} + e_t$$ This is called the **measurement (or observation) equation**.
+The measurement equation shows the relationship between the observation and the unobserved states.
+In this case, observation $y_t$ is a linear function of the level $l_{t−1}$, the predictable part of $y_t$, and the error $e_t$, the unpredictable part of $y_t$. For other innovations state space models, this relationship may be nonlinear.
+
+$$l_t = l_{t-1} + αe_t$$ This is called the **state (or transition) equation**.
+The state equation shows the evolution of the state through time.
+
+These 2 equations together with the statistical distribution of errors constitute the innovation state space model underlying simple exponential smoothing.
+
+##### ETS(M,N,N) :- Simple Exponential Smoothing with multiplicative error.
+
+Similarly, we can specify models with the multiplicative errors. In this case, the training errors are relative errors $$e_t = \frac{y_t - \hat y_{t|t-1}}{\hat y_{t|t-1}}.$$
+
+Multiplicative form of the state space model is given by :-
+$$y_t = l_{t-1}(1 + e_t)$$
+$$l_t = l_{t-1}(1 + αe_t)$$
+
+##### ETS(A,A,N) :- Holt's Linear Method with additive error.
+
+In this case, the training errors are given as $$e_t = y_t - l_{t-1} - b_{t-1}.$$
+State space form is given by :-
+$$y_t = l_{t-1}+ b_{t-1} + e_t$$
+$$l_t = l_{t-1}+ b_{t-1} + αe_t$$
+$$b_t = b_{t-1} + βe_t$$
+where $β = αβ^*$.
+
+##### ETS(M,A,N) :- Holt's Linear Method with multiplicative error.
+
+In this case, the training errors are given as $$e_t = \frac{y_t - l_{t-1} - b_{t-1}}{l_{t-1} + b_{t-1}}$$
+State space form is given by :-
+$$y_t = (l_{t-1}+ b_{t-1})(1 + e_t)$$
+$$l_t = (l_{t-1}+ b_{t-1})(1 + αe_t)$$
+$$b_t = b_{t-1} + β(l_{t-1}+ b_{t-1})e_t$$
+
+**The rest of the state space model are in the SSM Models.png file in the repository.**
+
