@@ -93,7 +93,7 @@ Also, models with multiplicative errors are useful when the data are strictly po
 
 ```{r}
 library(fpp2)
-aust = window(austourists, start = 2006)
+aust = window(austourists, start = 2005)
 fit = ets(aust)
 summary(fit)
 ```
@@ -106,5 +106,38 @@ $$s_t = s_{t-m}(1+γe_t)$$
 autoplot(fit)
 ```
 
+The small values of β and γ mean that the slope and seasonal components change very little over time. The narrow prediction intervals indicate that the series is relatively easy to forecast due to the strong trend and seasonality.
 
+In a multiplicative error model, the residuals are not equivalent to the one-step training error.
+```{r}
+cbind('Residuals' = residuals(fit),
+      'Forecast errors' = residuals(fit, type = "response")) %>%
+  autoplot(facets = TRUE) + xlab("Year") + ylab("")
+```
 
+#### Forecasting with ETS Model
+Point forecasts from the models by iterating the equations for t = T+1, T+2,... T+h and setting $e_t$ = 0 for t>T.
+
+$$y_{T+1} = (l_T + b_T) (1+e_{T+1})$$ This means that
+$$\hat y_{T+1} = l_T + b_T$$
+
+Similarly,
+$$y_{T+2} = (l_{T+1} + b_{T+1}) (1+e_{T+1})$$ This gives
+$$\hat y_{T+2} = l_T + 2b_T$$
+
+The forecasts from state space model and Holt's methods are same given that same parameters and model structure is selected.
+
+ETS point forecasts are equal to the medians of the forecast distributions. For models with only additive components, the forecast distributions are normal, so the medians and means are equal. For ETS models with multiplicative errors, or with multiplicative seasonality, the point forecasts will not be equal to the means of the forecast distributions.
+
+```{r}
+fit %>% forecast(h = 8) %>%
+  autoplot() +
+  ylab("International visitor in Australia (millions)")
+```
+
+As mentioned earlier that a big advantage of state space model is that we can produce prediction interval. For most ETS model, the prediction interval can be written as
+$$\hat y_{T+h|T} \pm cσ_h$$
+
+where c is based on the coverage probability and $σ_h^2$ is the forecast variance value of which is in the "Forecast variance ETS".
+
+For a few ETS models, there are no known formulas for prediction intervals. In these cases, the forecast() function uses simulated future sample paths and computes prediction intervals from the percentiles of these simulated future paths.
