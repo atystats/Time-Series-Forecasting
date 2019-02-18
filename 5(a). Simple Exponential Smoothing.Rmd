@@ -81,3 +81,45 @@ fc
 ```
 
 We can also see that the prediction are very high in this case which shows there is considerable uncertainity in the future oil value.
+
+##### Excercise 
+1. No. of pigs slaughtered in Victoria each month.
+```{r}
+autoplot(pigs)
+pigs_forc = ses(pigs, h = 4)
+pigs_forc$model
+```
+
+The data do not show any trend or seasonal pattern. We have applied exponential smoothing method.
+The value of alpha is 0.2971. A smaller value of alpha shows that higher weight is given to past observations.
+
+```{r}
+pigs_forc
+```
+
+95% confidence interval of first forecast
+```{r}
+#Manually
+print("lower limit")
+pigs_forc$mean[1] - 1.96 * sd(residuals(pigs_forc))
+print("upper limit")
+pigs_forc$mean[1] + 1.96 * sd(residuals(pigs_forc))
+```
+
+The CI calculated is close to the one calculated by R.
+
+2. Function for simple exponential smoothing
+```{r}
+Ses_f <- function(y, alpha, level){
+  forc = (1-alpha)^(length(pigs)) * level
+  for (i in (length(pigs)-1):0) {
+    forc = forc + alpha*(1-alpha)^i * pigs[length(pigs)-i]
+  }
+  return(forc)
+}
+# Check if the function gives the same result as the ses function.
+Ses_f(pigs, 0.2971, 77260.0561)
+```
+
+The results from the user defined function and ses function are approximately same.
+
