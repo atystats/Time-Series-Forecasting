@@ -83,7 +83,7 @@ fc
 We can also see that the prediction are very high in this case which shows there is considerable uncertainity in the future oil value.
 
 ##### Excercise 
-1. No. of pigs slaughtered in Victoria each month.
+**1. No. of pigs slaughtered in Victoria each month.**
 ```{r}
 autoplot(pigs)
 pigs_forc = ses(pigs, h = 4)
@@ -100,15 +100,15 @@ pigs_forc
 95% confidence interval of first forecast
 ```{r}
 #Manually
-print("lower limit")
-pigs_forc$mean[1] - 1.96 * sd(residuals(pigs_forc))
-print("upper limit")
-pigs_forc$mean[1] + 1.96 * sd(residuals(pigs_forc))
+print(c("lower limit" , pigs_forc$mean[1] - 1.96 * sd(residuals(pigs_forc))))
+
+print(c("upper limit",pigs_forc$mean[1] + 1.96 * sd(residuals(pigs_forc))))
+
 ```
 
 The CI calculated is close to the one calculated by R.
 
-2. Function for simple exponential smoothing
+**2. Function for simple exponential smoothing**
 ```{r}
 Ses_f <- function(y, alpha, level){
   forc = (1-alpha)^(length(pigs)) * level
@@ -122,4 +122,36 @@ Ses_f(pigs, 0.2971, 77260.0561)
 ```
 
 The results from the user defined function and ses function are approximately same.
+
+**3. Function to return sum of squared error **
+```{r}
+Ses_err <- function(param,y){
+  alpha = param[1]
+  level = param[2]
+  pred = vector(length = length(y))
+  pred[1] = level
+  SSE = (pigs[1] - pred[1])^2
+  for (i in 2:length(y)) {
+    pred[i] = alpha * y[i-1] + (1 - alpha) * pred[i-1]
+    SSE = SSE + (y[i] - pred[i])^2
+  }
+  return(SSE)
+}
+
+optim(c(1,pigs[1]), fn = Ses_err, y= pigs)
+```
+The value of alpha and level from optim function are close to the ses function.
+
+**4. Construting the ses function**
+```{r}
+SES <- function(data){
+  param = optim(c(1,data[1]), fn = Ses_err, y= data)$par
+  forecast = Ses_f(data, param[1], param[2])
+  forc = list(param[1], param[2], forecast)
+  names(forc) <- c("alpha", "level", "1st forecast")
+  return(forc)
+}
+
+SES(pigs)
+```
 
