@@ -155,3 +155,33 @@ SES <- function(data){
 SES(pigs)
 ```
 
+**5. Daily Sales of paperback and hardcover books**
+```{r}
+autoplot(books) + xlab("Day") +
+  ylab("No. of books") + ggtitle("Daily sales of paperback and hardcover books")
+```
+
+The 2 series seems to have an increasing trend but no seasonality present.
+
+```{r}
+fc_pb = ses(books[,1], h = 4)
+autoplot(fc_pb) + 
+  autolayer(fitted(fc_pb), series = "Fitted") +
+  xlab("Day") +
+  ylab("No. of books")
+
+print(c("RMSE",sqrt(mean((books[,1] - fitted(fc_pb))^2))))
+```
+
+
+```{r}
+fc_hc = ses(books[,2], h = 4)
+autoplot(fc_hc) + 
+  autolayer(fitted(fc_hc), series = "Fitted") +
+  xlab("Day") +
+  ylab("No. of books")
+
+print(c("RMSE",sqrt(mean((books[,2] - fitted(fc_hc))^2))))
+```
+
+The 2 methods showing high error because we are not considering trend in the data which is an incorrect assumption in this case.

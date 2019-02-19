@@ -195,3 +195,37 @@ autoplot(hyndsight) +
 ```
 
 Clearly the model has identified the weekly seasonal pattern and the increasing trend at the end of the data, and the forecasts are a close match to the test data.
+
+#### Excercise
+
+**6. Holt' method on the books data**
+```{r}
+holtfc_pb = holt(books[,1], h = 4)
+autoplot(holtfc_pb) + 
+  autolayer(fitted(holtfc_pb), series = "Fitted") +
+  xlab("Day") +
+  ylab("No. of books")
+holtfc_pb$model
+
+print(c("RMSE",sqrt(mean((books[,1] - fitted(holtfc_pb))^2))))
+```
+
+```{r}
+holtfc_hc = holt(books[,2], h = 4)
+autoplot(holtfc_hc) + 
+  autolayer(fitted(holtfc_hc), series = "Fitted") +
+  xlab("Day") +
+  ylab("No. of books")
+holtfc_hc$model
+
+print(c("RMSE",sqrt(mean((books[,2] - fitted(holtfc_hc))^2))))
+```
+The small values of alpha and beta shows that trend do not change much overtime. Also the RMSE has decreased from simple SES.
+
+95% Forecast interval :-
+```{r}
+print(c("lower limit" , holtfc_pb$mean[1] - 1.96 * sd(residuals(holtfc_pb))))
+
+print(c("upper limit",holtfc_pb$mean[1] + 1.96 * sd(residuals(holtfc_pb))))
+```
+
