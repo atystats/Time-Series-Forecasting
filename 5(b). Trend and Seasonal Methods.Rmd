@@ -229,3 +229,29 @@ print(c("lower limit" , holtfc_pb$mean[1] - 1.96 * sd(residuals(holtfc_pb))))
 print(c("upper limit",holtfc_pb$mean[1] + 1.96 * sd(residuals(holtfc_pb))))
 ```
 
+**7. Holt' method on eggs data**
+```{r}
+autoplot(eggs) +
+  xlab("Year") + ylab("") + ggtitle("Price of dozen eggs in US")
+```
+
+```{r}
+eggs_fc = holt(eggs, h = 50)
+autoplot(eggs_fc) + 
+  autolayer(fitted(eggs_fc), series = "Fitted Values") +
+  xlab("Year") + ylab("") +
+  ggtitle("Price of dozen eggs in US")
+accuracy(eggs_fc)
+```
+
+Holt's method with a dampning effect
+```{r}
+eggs_fc = holt(eggs, h = 10, lambda = BoxCox.lambda(eggs), damped = TRUE)
+autoplot(eggs_fc) + 
+  autolayer(fitted(eggs_fc), series = "Fitted Values") +
+  xlab("Year") + ylab("") +
+  ggtitle("Price of dozen eggs in US")
+
+accuracy(eggs_fc)
+```
+
