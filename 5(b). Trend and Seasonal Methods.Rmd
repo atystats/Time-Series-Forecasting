@@ -255,3 +255,56 @@ autoplot(eggs_fc) +
 accuracy(eggs_fc)
 ```
 
+**8. Retail Time Series Data **
+```{r}
+retaildata = readxl::read_excel("/Users/atyagi/Desktop/Time Series Forecasting/Time-Series-Forecasting/Time_series_data/retail.xlsx",skip =1)
+myts = ts(retaildata[,"A3349873A"], start = c(1984,4), frequency = 12)
+autoplot(myts)
+```
+
+This time has an increasing trend and seasonality present that increase in size with level of the series. We can either assume a multiplicative model or we can apply BoxCox transformation and fit an additive model.
+```{r}
+retail_fc = hw(myts, seasonal = "multiplicative", h = 50)
+autoplot(retail_fc) +
+  autolayer(fitted(retail_fc), series = "Fitted") +
+  xlab("Year") + ylab("")
+
+e = tsCV(myts, hw, h = 1, seasonal = "multiplicative")
+writeLines("RMSE using Holt Winters method assuming multiplicative seasonality")
+sqrt(mean(e^2, na.rm = TRUE))
+```
+
+It seems that the multiplicative model fits the data quite well. But the high prediction interval shows high uncertainity related to the forecast.
+
+We will see if dampning the effect will give us a better result.
+```{r}
+retail_fc = hw(myts, seasonal = "multiplicative", h = 50, damped = TRUE)
+autoplot(retail_fc) +
+  autolayer(fitted(retail_fc), series = "Fitted") +
+  xlab("Year") + ylab("")
+
+e = tsCV(myts, hw, h = 1, seasonal = "multiplicative", damped = TRUE)
+writeLines("RMSE using Holt Winters method assuming multiplicative seasonality")
+sqrt(mean(e^2, na.rm = TRUE))
+```
+
+we will cehck wheather the residuals looks like white noise or not.
+```{r}
+checkresiduals(retail_fc)
+```
+
+The residuals do not looks like white noise. The ACF plot shows significant correlation between lags. LB test is also proves the same.
+
+We will calculate test set errors.
+```{r}
+ts_retail_train <- window(myts,
+                          end = c(2010, 12))
+ts_retail_test <- window(myts,
+                         start = 2011)
+
+ts_retail_train_fc = hw(ts_retail_train, seasonal = "multiplicative", h = 50, damped = TRUE)
+accuracy(ts_retail_train_fc, ts_retail_test)
+```
+
+The RMSE on the training set much higher than what we have calculated using sesonal naive method (25.09626).
+
