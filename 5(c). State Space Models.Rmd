@@ -141,3 +141,80 @@ $$\hat y_{T+h|T} \pm cσ_h$$
 where c is based on the coverage probability and $σ_h^2$ is the forecast variance value of which is in the "Forecast variance ETS".
 
 For a few ETS models, there are no known formulas for prediction intervals. In these cases, the forecast() function uses simulated future sample paths and computes prediction intervals from the percentiles of these simulated future paths.
+
+#### Excercise
+
+**9. Retail time series data**
+We will first decompose the time series using STL method
+```{r}
+retaildata = readxl::read_excel("/Users/atyagi/Desktop/Time Series Forecasting/Time-Series-Forecasting/Time_series_data/retail.xlsx",skip =1)
+myts = ts(retaildata[,"A3349873A"], start = c(1984,4), frequency = 12)
+library(seasonal)
+myts %>% as.vector() %>% ts(start = c(1984,4), frequency = 12) %>%
+  BoxCox(lambda = BoxCox.lambda(myts)) %>%
+  stl(t.window = 13, s.window = "periodic", robust = TRUE) %>%
+  autoplot()
+```
+
+The additive model gives the increasing seasonality but as we saw that a multiplicative model work better in this case and STL function do not allow for multiplicative model, we are first transforming the data and then applying the addtive model.
+
+```{r}
+ts_retail_train <- window(myts,
+                          end = c(2010, 12))
+ts_retail_test <- window(myts,
+                         start = 2011)
+
+fit = ts_retail_train %>% stlm(lambda = BoxCox.lambda(ts_retail_train), s.window = 13, method = "ets", robust = TRUE) %>%
+  forecast(h = 36, lambda = BoxCox.lambda(ts_retail_train))
+autoplot(fit)
+accuracy(fit, ts_retail_test)
+```
+
+**10. UK passenger vehicle production data **
+
+```{r}
+autoplot(ukcars) + 
+  xlab("Year") + ylab("") +
+  ggtitle("UK passenger vehicle production data")
+```
+
+The data has trend-cycle component and seasonal variation as well.
+```{r}
+ukcars %>% 
+  stl(t.window = 13, s.window = "periodic") %>%
+  autoplot()
+```
+
+Seasonally adjusted data
+```{r}
+ukcars %>% 
+  stl(t.window = 13, s.window = "periodic") %>% seasadj() %>%
+  autoplot()
+```
+
+Model with damped effect
+```{r}
+ukcars %>% stlf(etsmodel = "AAN", damped = TRUE) %>% autoplot()
+ukcars %>% stlf(etsmodel = "AAN", damped = TRUE) %>% accuracy()
+```
+
+Model without damped effect
+```{r}
+ukcars %>% stlf(etsmodel = "AAN") %>% autoplot()
+ukcars %>% stlf(etsmodel = "AAN") %>% accuracy()
+```
+
+Model with seasonal component as well
+```{r}
+ukcars %>% ets() 
+```
+
+The model selected assuming no trend in the data.
+```{r}
+ukcars %>% ets() -> fit
+autoplot(forecast(fit, h = 8))
+accuracy(fit)
+```
+
+Considering RMSE, the last ets model is giving higher RMSE. The RMSE of above 2 models are approximately same.
+
