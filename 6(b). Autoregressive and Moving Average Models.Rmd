@@ -1,0 +1,49 @@
+---
+title: "6(b).Autoregressive and Moving Averages Model"
+author: "Ankit"
+date: "3/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Autoregressive Model
+Autoregressive model forecast the variable of interest using a linear combination of it's past values.
+
+An autoregressive model of order p AR(p) is given as 
+$$y_t = c + ϕ_1y_{t-1} + ϕ_2y_{t-2} +.......+ ϕ_py_{t-p} + e_t$$
+
+Changing the parameters will result in different time series pattern. The variance of the error term will only change the scale of the series not the pattern.
+
+Special cases of AR model:-
+
+1. When $ϕ_1$ = 0, then $y_t$ is equivalent to white noise.
+
+2. When $ϕ_1$ = 1 and c = 0, then $y_t$ is equivalent to the random walk.
+
+3. When $ϕ_1$ = 1 and $c \ne 0$, then $y_t$ is equivalent to the random walk with drift.
+
+4. When $ϕ_1$ < 0, $y_t$ tends to oscillate between positive and negative values;
+
+We normally restrict autoregressive models to stationary data, in which case some constraints on the values of the parameters are required.
+
+1. For an AR(1) model:- -1 < $ϕ_1$ < 1.
+
+2. For an AR(2) model:- -1 < $ϕ_1$ < 1, $ϕ_1+ ϕ_2$  < 1  and $ϕ_2 - ϕ_1$<1.
+
+When p $\ge$ 3, the restriction gets more complicated.
+
+### Moving Average Model
+A moving average model uses past forecast errors as predictors in a linear regression type model.
+
+A moving average model with order q MA(q) is given as
+$$y_t = c + e_t + \theta_1 e_{t-1} + \theta_2 e_{t-2} + ............ + \theta_qe_{t-q}$$
+Note that it is not exactly a linear regression model as we do not observe $e_t$.
+
+This is called moving average model because each $y_t$ can be think of as a weighted moving average of past forecast errors. It is different from moving average smoothing method as it trying forecast future values while MA smoothing tries to estimate trend cycle component.
+
+
+
+
