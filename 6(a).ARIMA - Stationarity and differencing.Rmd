@@ -113,5 +113,3 @@ For Seasonal differencing
 ```{r}
 nsdiffs(usmelec)
 ```
-
-
