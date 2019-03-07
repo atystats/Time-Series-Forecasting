@@ -1,0 +1,117 @@
+---
+title: "6(a).ARIMA - Stationarity and differencing"
+author: "Ankit"
+date: "3/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Stationarity and differencing
+**Stationarity **
+
+A stationary time series is one whose properties do not depend on the time at which the series is observed.
+A time series with trend or seasonality is not stationary but a time series with cyclic variation but no trend and seasonality is stationary because the cycles do not have any fixed frequency. A white noise process is stationary.
+
+In general, a stationary time series has no predictable pattern in long term.
+
+**Differencing **
+
+Computing the differences between consecutive observations to make the series stationary is called differencing.
+Differencing can help stabilise the mean of the series by removing changes in the level of a time series, and therefore eliminating trend and seasonality.
+
+ACF plot is one of way of identifying non stationary time series.
+ACF plot of stationary series will drop to zero more quickly.
+
+```{r}
+library(fpp2)
+ggAcf(goog200)
+ggAcf(diff(goog200))
+```
+
+We can see the ACF of the differencing series above becomes stationary and ACF plot shows no significant correlation. 
+
+We can also do 2nd order differencing as well.
+
+#### Random Walk Model
+The differenced series is the change between consecutive observations in the original series. When the differenced series is a white noise, the model for original series can be written as 
+
+$$y_t - y_{t-1} = e_t$$
+where $e_t$ denotes white noise. Rearranging this will gives us the random walk model.
+
+=>$$y_t = y_{t-1} + e_t$$
+
+Some properties of random walk process is
+1. long periods of apparent trend up or down.
+2. sudden and unpredictable changes in direction.
+
+The forecasts from a random walk model are equal to the last observation, as future movements are unpredictable, and are equally likely to be up or down. Thus, the random walk model underpins naïve forecasts
+
+Another related model is 
+$$y_t - y_{t-1} = c + e_t\ or\ y_t = y_{t-1} + c + e_t$$
+
+The value of c is the average of the changes between consecutive observations. If c is positive, then the average change is an increase in the value of $y_t$. Thus, $y_t$ will tend to drift upwards. If c is negative, then $y_t$ will tend to drift downward. This is the model behind the drift method.
+
+#### Seasonal differencing 
+A seasonal difference is the difference between an observation and the previous observation from the same season. So,
+$$y_{t}^{'} = y_t - y_{t-m}$$
+where m = no. of seasons. If seasonally differenced data appears as white noise, then the model for original series would be 
+$$y_t = y_{t-m} + e_t$$
+
+Example : 
+```{r}
+cbind("Sales (in millions)" = a10,
+      "Monthly log sales" = log(a10),
+      "Annual changes in log scales" = diff(log(a10),12)) %>%
+  autoplot(facets = TRUE) +
+  xlab("Year") + ylab("") +
+  ggtitle("Antidiabetic drug sales")
+```
+
+Above, we are first controlling the variance by taking log and then doing seasonal differencing. The last series is the differenced series that looks like white noise but the mean is not zero. An intercept model will help to make the mean 0.
+
+Sometimes it is necessary to take seasonal difference and first difference both to make a series stationary.
+
+```{r}
+cbind("Billion Kwh" = usmelec,
+      "logs" = log(usmelec),
+      "seasonally differenced logs" = diff(log(usmelec), 12),
+      "Double differenced logs" = diff(diff(log(usmelec),12),1)) %>%
+  autoplot(facets = TRUE) +
+  xlab("Year") +
+  ylab("") +
+  ggtitle("Monthly US net electricity production")
+```
+
+There is no rule for how much differencing is required. This excercise is subjective to the analysts. But if there is a sesonality present in the data, we should do sesonal differencing first because that alone might make the series stationary.
+
+**Unit Root Test**
+One way to determine if the differencing is required is to use unit root test. One such test is Kwiatkowski-Phillips-Schmidt-Shin (KPSS) test. In this test, the null hypothesis is that the data are stationary.
+
+```{r}
+library(urca)
+goog %>% ur.kpss() %>% summary()
+```
+The value is much bigger than the 1% critical value that means that the null hypothesis is rejected. Thus, the data is not not stationary.
+
+
+```{r}
+goog %>% diff %>% ur.kpss() %>% summary()
+```
+
+Now the value is within the range so we can conclude that the data is stationary.
+
+One way to do this test is to use ndiff function
+```{r}
+ndiffs(goog)
+```
+first order differencing is required.
+
+For Seasonal differencing
+```{r}
+nsdiffs(usmelec)
+```
+
+
