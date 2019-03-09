@@ -152,6 +152,11 @@ $(document).ready(function () {
 <p>A moving average model uses past forecast errors as predictors in a linear regression type model.</p>
 <p>A moving average model with order q MA(q) is given as <span class="math display">\[y_t = c + e_t + \theta_1 e_{t-1} + \theta_2 e_{t-2} + ............ + \theta_qe_{t-q}\]</span> Note that it is not exactly a linear regression model as we do not observe <span class="math inline">\(e_t\)</span>.</p>
 <p>This is called moving average model because each <span class="math inline">\(y_t\)</span> can be think of as a weighted moving average of past forecast errors. It is different from moving average smoothing method as it trying forecast future values while MA smoothing tries to estimate trend cycle component.</p>
+<p>It is possible to write a AR(p) model as MA(∞). The reverse is also true if we impose some constraints on the MA parameters. Then the MA model is called invertible. For eg. Consider MA(1) process, in AR(∞) process, the most recent errors can be written as linear function of current and past observations. <span class="math display">\[e_t = \sum_{j=0}^{∞}(-\theta)^j y_{t-j}.\]</span> When |<span class="math inline">\(\theta\)</span>| &gt; 1, the weights increase as lags increase, so the more distant the observations the greater their influence on the current error. When |<span class="math inline">\(\theta\)</span>| = 1, the weights are constant in size, and the distant observations have the same influence as the recent observations. As neither of these situations make much sense, we require |<span class="math inline">\(\theta\)</span>| &lt; 1, so the most recent observations have higher weight than observations from the more distant past. Thus, the process is invertible when |<span class="math inline">\(\theta\)</span>| &lt; 1.</p>
+<ol style="list-style-type: decimal">
+<li><p>For an MA(1) model:- -1 &lt; <span class="math inline">\(\theta_1\)</span> &lt; 1.</p></li>
+<li><p>For an MA(2) model:- -1 &lt; <span class="math inline">\(\theta_2\)</span> &lt; 1, <span class="math inline">\(\theta_2 + \theta_1\)</span> &lt; 1 and <span class="math inline">\(\theta_1 - \theta_2\)</span>&lt;1.</p></li>
+</ol>
 </div>
 
 

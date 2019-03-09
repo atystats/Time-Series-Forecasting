@@ -44,6 +44,11 @@ Note that it is not exactly a linear regression model as we do not observe $e_t$
 
 This is called moving average model because each $y_t$ can be think of as a weighted moving average of past forecast errors. It is different from moving average smoothing method as it trying forecast future values while MA smoothing tries to estimate trend cycle component.
 
+It is possible to write a AR(p) model as MA(∞). The reverse is also true if we impose some constraints on the MA parameters. Then the MA model is called invertible.
+For eg. Consider MA(1) process, in AR(∞) process, the most recent errors can be written as linear function of current and past observations.
+$$e_t = \sum_{j=0}^{∞}(-\theta)^j y_{t-j}.$$
+When |$\theta$| > 1, the weights increase as lags increase, so the more distant the observations the greater their influence on the current error. When |$\theta$| = 1, the weights are constant in size, and the distant observations have the same influence as the recent observations. As neither of these situations make much sense, we require |$\theta$| < 1, so the most recent observations have higher weight than observations from the more distant past. Thus, the process is invertible when |$\theta$| < 1.
 
+1. For an MA(1) model:- -1 < $\theta_1$ < 1.
 
-
+2. For an MA(2) model:- -1 < $\theta_2$ < 1, $\theta_2 + \theta_1$  < 1  and $\theta_1 - \theta_2$<1.
