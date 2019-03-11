@@ -1,5 +1,5 @@
 ---
-title: "6(b).Autoregressive and Moving Averages Model"
+title: "6(b).ARIMA Models - Foundation"
 author: "Ankit"
 date: "3/7/2019"
 output: html_document
@@ -52,3 +52,50 @@ When |$\theta$| > 1, the weights increase as lags increase, so the more distant 
 1. For an MA(1) model:- -1 < $\theta_1$ < 1.
 
 2. For an MA(2) model:- -1 < $\theta_2$ < 1, $\theta_2 + \theta_1$  < 1  and $\theta_1 - \theta_2$<1.
+
+### Non-seasonal ARIMA Models
+If we combine differencing with autoregression and a moving average model, we obtain a non seasonal ARIMA model. The full model can be written as
+$$y_{t}^{'} = c + ϕ_1y_{t-1}^{'} + ϕ_2y_{t-2}^{'} +.......+ ϕ_py_{t-p} ^{'}+ \theta_1 e_{t-1} + \theta_2 e_{t-2} + ............ + \theta_qe_{t-q} + e_t$$
+
+where $y_{t}^{'}$ is the differenced series. The above can be called as ARIMA(p,d,q). 
+
+p = Order of autoregressive part.
+
+d = degree of first differencing involved
+
+q = order of moving average part.
+
+Other models as special case of ARIMA models:-
+
+1. ARIMA(0,0,0) = white noise.
+
+2. ARIMA(0,1,0) with no constant = Random walk.
+
+3. ARIMA(0,1,0) with a constant = Random walk with no drift.
+
+4. ARIMA(p,0,0) = Autoregression.
+
+5. ARIMA(0,0,q) = Moving average model.
+
+Now let us denote B as a backshift operator, then $By_t = y_{t-1}$
+
+So one-step difference can be written as $(1-B)y_t$. 
+
+The ARIMA equation above can be written as
+$$AR(p) = (1 - ϕ_1B - ϕ_2B^2 - .... ϕ_pB^p)$$
+$$MA(q) = c + (1 + \theta_1B + \theta_2B^2 + .... + \theta_qB^q)e_t$$
+
+then 
+$$(1 - ϕ_1B - ϕ_2B^2 - .... ϕ_pB^p) (1-B)^dy_t = c+ (1+\theta_1B + \theta_2B^2 + .... + \theta_qB^q)e_t$$
+Now selecting p,q,d can be very difficult, so we use the function auto.arima to do it.
+
+**Example :-**
+```{r}
+autoplot(uschange[,"Consumption"]) +
+  xlab("Year") + ylab("Quarterly percentage change")
+```
+
+```{r}
+fit = auto.arima(uschange[,"Consumption"], seasonal = FALSE)
+summary(fit)
+```
