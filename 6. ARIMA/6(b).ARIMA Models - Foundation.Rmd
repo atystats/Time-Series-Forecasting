@@ -85,12 +85,13 @@ The ARIMA equation above can be written as
 $$AR(p) = (1 - ϕ_1B - ϕ_2B^2 - .... ϕ_pB^p)$$
 $$MA(q) = c + (1 + \theta_1B + \theta_2B^2 + .... + \theta_qB^q)e_t$$
 
-then 
+then ARIMA equation is 
 $$(1 - ϕ_1B - ϕ_2B^2 - .... ϕ_pB^p) (1-B)^dy_t = c+ (1+\theta_1B + \theta_2B^2 + .... + \theta_qB^q)e_t$$
 Now selecting p,q,d can be very difficult, so we use the function auto.arima to do it.
 
 **Example :-**
 ```{r}
+library(fpp2)
 autoplot(uschange[,"Consumption"]) +
   xlab("Year") + ylab("Quarterly percentage change")
 ```
@@ -99,3 +100,13 @@ autoplot(uschange[,"Consumption"]) +
 fit = auto.arima(uschange[,"Consumption"], seasonal = FALSE)
 summary(fit)
 ```
+This is a ARIMA(2,0,2) model.
+$$y_t = c + 1.3908 y_{t-1} - 0.5813 y_{t-2} + e_t - 1.18 e_{t-1} + 0.5584 e_{t-2}$$
+where c = 0.7463 * (1 - 1.3908 + 0.5813) = 0.1421701.
+$e_t$ is the white noise with standard deviation of $\sqrt{0.3511} = 0.5925$.
+
+Forecast is
+```{r}
+fit %>% forecast(h = 10) %>% autoplot(include = 80)
+```
+
