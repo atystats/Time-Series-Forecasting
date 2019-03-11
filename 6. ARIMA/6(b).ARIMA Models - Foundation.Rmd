@@ -1,0 +1,175 @@
+---
+title: "6(b).ARIMA Models - Foundation"
+author: "Ankit"
+date: "3/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Autoregressive Model
+Autoregressive model forecast the variable of interest using a linear combination of it's past values.
+
+An autoregressive model of order p AR(p) is given as 
+$$y_t = c + ϕ_1y_{t-1} + ϕ_2y_{t-2} +.......+ ϕ_py_{t-p} + e_t$$
+
+Changing the parameters will result in different time series pattern. The variance of the error term will only change the scale of the series not the pattern.
+
+Special cases of AR model:-
+
+1. When $ϕ_1$ = 0, then $y_t$ is equivalent to white noise.
+
+2. When $ϕ_1$ = 1 and c = 0, then $y_t$ is equivalent to the random walk.
+
+3. When $ϕ_1$ = 1 and $c \ne 0$, then $y_t$ is equivalent to the random walk with drift.
+
+4. When $ϕ_1$ < 0, $y_t$ tends to oscillate between positive and negative values;
+
+We normally restrict autoregressive models to stationary data, in which case some constraints on the values of the parameters are required.
+
+1. For an AR(1) model:- -1 < $ϕ_1$ < 1.
+
+2. For an AR(2) model:- -1 < $ϕ_1$ < 1, $ϕ_1+ ϕ_2$  < 1  and $ϕ_2 - ϕ_1$<1.
+
+When p $\ge$ 3, the restriction gets more complicated.
+
+### Moving Average Model
+A moving average model uses past forecast errors as predictors in a linear regression type model.
+
+A moving average model with order q MA(q) is given as
+$$y_t = c + e_t + \theta_1 e_{t-1} + \theta_2 e_{t-2} + ............ + \theta_qe_{t-q}$$
+Note that it is not exactly a linear regression model as we do not observe $e_t$.
+
+This is called moving average model because each $y_t$ can be think of as a weighted moving average of past forecast errors. It is different from moving average smoothing method as it trying forecast future values while MA smoothing tries to estimate trend cycle component.
+
+It is possible to write a AR(p) model as MA(∞). The reverse is also true if we impose some constraints on the MA parameters. Then the MA model is called invertible.
+For eg. Consider MA(1) process, in AR(∞) process, the most recent errors can be written as linear function of current and past observations.
+$$e_t = \sum_{j=0}^{∞}(-\theta)^j y_{t-j}.$$
+When |$\theta$| > 1, the weights increase as lags increase, so the more distant the observations the greater their influence on the current error. When |$\theta$| = 1, the weights are constant in size, and the distant observations have the same influence as the recent observations. As neither of these situations make much sense, we require |$\theta$| < 1, so the most recent observations have higher weight than observations from the more distant past. Thus, the process is invertible when |$\theta$| < 1.
+
+1. For an MA(1) model:- -1 < $\theta_1$ < 1.
+
+2. For an MA(2) model:- -1 < $\theta_2$ < 1, $\theta_2 + \theta_1$  < 1  and $\theta_1 - \theta_2$<1.
+
+### Non-seasonal ARIMA Models
+If we combine differencing with autoregression and a moving average model, we obtain a non seasonal ARIMA model. The full model can be written as
+$$y_{t}^{'} = c + ϕ_1y_{t-1}^{'} + ϕ_2y_{t-2}^{'} +.......+ ϕ_py_{t-p} ^{'}+ \theta_1 e_{t-1} + \theta_2 e_{t-2} + ............ + \theta_qe_{t-q} + e_t$$
+
+where $y_{t}^{'}$ is the differenced series. The above can be called as ARIMA(p,d,q). 
+
+p = Order of autoregressive part.
+
+d = degree of first differencing involved
+
+q = order of moving average part.
+
+Other models as special case of ARIMA models:-
+
+1. ARIMA(0,0,0) = white noise.
+
+2. ARIMA(0,1,0) with no constant = Random walk.
+
+3. ARIMA(0,1,0) with a constant = Random walk with no drift.
+
+4. ARIMA(p,0,0) = Autoregression.
+
+5. ARIMA(0,0,q) = Moving average model.
+
+Now let us denote B as a backshift operator, then $By_t = y_{t-1}$
+
+So one-step difference can be written as $(1-B)y_t$. 
+
+The ARIMA equation above can be written as
+$$AR(p) = (1 - ϕ_1B - ϕ_2B^2 - .... ϕ_pB^p)$$
+$$MA(q) = c + (1 + \theta_1B + \theta_2B^2 + .... + \theta_qB^q)e_t$$
+
+then ARIMA equation is 
+$$(1 - ϕ_1B - ϕ_2B^2 - .... ϕ_pB^p) (1-B)^dy_t = c+ (1+\theta_1B + \theta_2B^2 + .... + \theta_qB^q)e_t$$
+Now selecting p,q,d can be very difficult, so we use the function auto.arima to do it.
+
+**Example :-**
+```{r}
+library(fpp2)
+autoplot(uschange[,"Consumption"]) +
+  xlab("Year") + ylab("Quarterly percentage change")
+```
+
+```{r}
+fit = auto.arima(uschange[,"Consumption"], seasonal = FALSE)
+summary(fit)
+```
+This is a ARIMA(2,0,2) model.
+$$y_t = c + 1.3908 y_{t-1} - 0.5813 y_{t-2} + e_t - 1.18 e_{t-1} + 0.5584 e_{t-2}$$
+where c = 0.7463 * (1 - 1.3908 + 0.5813) = 0.1421701.
+$e_t$ is the white noise with standard deviation of $\sqrt{0.3511} = 0.5925$.
+
+Forecast is
+```{r}
+fit %>% forecast(h = 10) %>% autoplot(include = 80)
+```
+
+The constant c has an important effect on long term forecasts.
+
+1. If c = 0 and d = 0, the long-term forecasts will go to zero.
+
+2. If c = 0 and d = 1, the long-term forecasts will go to a constant.
+
+3. If c = 0 and d = 2, the long-term forecasts will follow a straight line.
+
+4. If c $\ne$ 0 and d = 0, the long-term forecasts will go to mean of the data.
+
+5. If c $\ne$ 0 and d = 1, the long-term forecasts will follow a straight line.
+
+6. If c $\ne$ 0 and d = 2, the long-term forecasts will follow a quadratic trend.
+
+The value of d also has an effect on the prediction intervals — the higher the value of d, the more rapidly the prediction intervals increase in size. For d = 0, the long-term forecast standard deviation will go to the standard deviation of the historical data, so the prediction intervals will all be essentially the same.
+
+The value of p is important if the data show cycles. To obtain cyclic forecasts, it is necessary to have p $\ge$ 2, along with some additional conditions on the parameters.
+
+#### ACF and PACF plots
+One way to find out the parameters p and q is ACF plots. ACF plots gives the correlation between lag values. 
+One issue with ACF plot is if $y_t$ and $y_{t−1}$ are correlated, then $y_{t−1}$ and $y_{t−2}$ must also be correlated. However, then $y_t$ and $y_{t−2}$ might be correlated, simply because they are both connected to $y_{t−1}$, rather than any information contains in $y_{t-2}$ that could be used in forecasting $y_t$.
+
+To overcome this we use partial autocorrelations. These measures the relationship between $y_t$ and $y_{t-k}$ after removing the effects of lags 1,2,3...., k-1. Each partial autocorrelation can be estiamted as the last coefficient in an autoregressive model.
+
+Specifically, $α_k$, the kth partial autocorrelation coefficient, is equal to the estimate of $ϕ_k$ in an AR(k) model.
+
+If the data are from ARIMA(0,d,q) or ARIMA(p,d,0) model, then the ACF and PACF plots can be helpful in determining the value of p or q. But if both p and q are positive, then the plots do not help in finding suitable values of p and q.
+
+The data may follow an ARIMA(p,d,0) model if 
+
+1. ACF is exponentially decaying or sinusoidal.
+
+2. there is a significant spike at lag p in the PACF, but none beyond lag p.
+
+The data may follow an ARIMA(0,d,q) model if 
+
+1. PACF is exponentially decaying or sinusoidal.
+
+2. there is a significant spike at lag q in the ACF, but none beyond lag q.
+
+```{r}
+ggAcf(uschange[,"Consumption"], main = "")
+```
+
+```{r}
+ggPacf(uschange[,"Consumption"], main = "")
+```
+
+The PACF plot above shows that PACF plot has decreasing trend and ACF has a spike at 3 and then no other spike which shows that ARIMA(3,0,0) might work for this data.
+
+```{r}
+fit2 = Arima(uschange[,"Consumption"], order = c(3,0,0))
+summary(fit2)
+```
+
+This model is giving a slightly better result then the model selected by auto.arima function.
+This is because the auto.arima function do not use all the possible model in its search. 
+
+```{r}
+fit3 = auto.arima(uschange[,"Consumption"], seasonal = FALSE, stepwise = FALSE, approximation = FALSE)
+summary(fit3)
+```
+This time it found the exact same model.
