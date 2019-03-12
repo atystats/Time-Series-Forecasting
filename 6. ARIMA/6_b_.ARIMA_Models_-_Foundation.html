@@ -280,6 +280,13 @@ summary(fit3)</code></pre>
 <p>This time it found the exact same model.</p>
 </div>
 </div>
+<div id="estimating-the-model" class="section level3">
+<h3>Estimating the model</h3>
+<p><strong>Maximum likelihood estimation</strong> Once the model is decided (values of p, d and q), we estimate the parameters <span class="math inline">\(c, ϕ_1, ϕ_2,....ϕ_p, \theta_1,..... \theta_q\)</span> by maximizing the likelihood of the data. This technique is called maximum likelihood estimation (MLE). This technique finds the values of the parameters which maximise the probability of obtaining the data that we have observed.</p>
+<p><strong>Information Criteria</strong> AIC is useful in selecting predictors for ARIMA model. <span class="math display">\[AIC = -2 log(L) + 2(p+q+k+1)\]</span> where L is the likelihood of the data.</p>
+<p>Corrected AIC can be written as <span class="math display">\[AICc = AIC + \frac{2(p+k+q+1)(p+k+q+2)}{T-p-q-k-2}\]</span> and Bayesian Information criteria as</p>
+<p><span class="math display">\[BIC = AIC + [log(T)-2](p+k+q+1)\]</span></p>
+</div>
 
 
 
