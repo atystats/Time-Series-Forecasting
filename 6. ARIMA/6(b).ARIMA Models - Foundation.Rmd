@@ -229,6 +229,29 @@ eeadj %>% diff() %>% ggtsdisplay(main = "")
 
 The differenced series looks stationary except there are some instance where we have high peaks and troughs. So we will not consider anymore differencing.
 
+PACF shows that there are spike till lag 3 and no significant spike after that. ACF plot also spikes at 1 but after that no consistency and gives a confusing look.
+We can try some iterations over ARIMA(3,1,0), ARIMA(3,1,1). Some other iterations can also be tried.
+
+```{r}
+fit = Arima(eeadj, order = c(3,1,0))
+summary(fit)
+```
+```{r}
+fit_2 = Arima(eeadj, order = c(3,1,1))
+summary(fit_2)
+```
+ARIMA(3,1,1) is giving a slightly better result. 
+
+```{r}
+checkresiduals(fit_2)
+```
+
+The residuals from ARIMA(3,1,1) shows no significant autocorrelation. Also, the residual plot looks like a white noise. The LB test also suggest the same.
+
+```{r}
+autoplot(forecast(fit_2))
+```
+
 
 
 
