@@ -211,3 +211,24 @@ A constant is included unless if d = 2, otherwise another model is fitted as ARI
 #### Modeling Procedure
 See the chart "arimaflowchart" in the repository.
 
+**Example **
+Electrical Equipment orders 
+We need to first adjust seasonality before we apply ARIMA.
+```{r}
+elecequip %>% stl(s.window = "periodic") %>% seasadj() -> eeadj
+autoplot(eeadj)
+```
+
+The data is now seasonally adjusted and all we see is a cyclic variation. 
+The data need not to be adjusted or transformed as variance is similar all over the time period.
+
+The data is not stationary as there are ups and downs in the series for a long period of time. We will see if differencing can help solving that.
+```{r}
+eeadj %>% diff() %>% ggtsdisplay(main = "")
+```
+
+The differenced series looks stationary except there are some instance where we have high peaks and troughs. So we will not consider anymore differencing.
+
+
+
+
