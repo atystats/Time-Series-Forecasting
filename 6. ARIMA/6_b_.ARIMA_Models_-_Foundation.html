@@ -286,6 +286,21 @@ summary(fit3)</code></pre>
 <p><strong>Information Criteria</strong> AIC is useful in selecting predictors for ARIMA model. <span class="math display">\[AIC = -2 log(L) + 2(p+q+k+1)\]</span> where L is the likelihood of the data.</p>
 <p>Corrected AIC can be written as <span class="math display">\[AICc = AIC + \frac{2(p+k+q+1)(p+k+q+2)}{T-p-q-k-2}\]</span> and Bayesian Information criteria as</p>
 <p><span class="math display">\[BIC = AIC + [log(T)-2](p+k+q+1)\]</span></p>
+<p>How auto.arima work by defualt is</p>
+<ol style="list-style-type: decimal">
+<li><p>Use KPSS test to determine the differencing (<span class="math inline">\(0\le d \ge 2\)</span>) required for the data.</p></li>
+<li><p>After differencing the data, choose the value of p and q by minimising AICc. To shorten this process the function uses a stepwise search approach. Four intial models are fitted :- (I).ARIMA(0,d,0) (II). ARIMA(2,d,2) (III). ARIMA(1,d,0) (IV). ARIMA(0,d,1)</p></li>
+</ol>
+<p>A constant is included unless if d = 2, otherwise another model is fitted as ARIMA(0,d,0) without a constant.</p>
+<ol start="3" style="list-style-type: decimal">
+<li><p>The best model is selected that minimize AICc.</p></li>
+<li><p>Variations on current model are considered like varying p and q by <span class="math inline">\(\pm\)</span> 1 and including/excluding constant from the current model.</p></li>
+<li><p>The new model that minimise AICc becomes the best current model.</p></li>
+</ol>
+<div id="modeling-procedure" class="section level4">
+<h4>Modeling Procedure</h4>
+<p>See the chart “arimaflowchart” in the repository.</p>
+</div>
 </div>
 
 
