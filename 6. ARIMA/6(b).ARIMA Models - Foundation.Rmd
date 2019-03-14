@@ -252,6 +252,25 @@ The residuals from ARIMA(3,1,1) shows no significant autocorrelation. Also, the 
 autoplot(forecast(fit_2))
 ```
 
+**Plotting the characteristic roots**
+We can write ARIMA model equation as 
+$$(1 - ϕ_1B - ϕ_2B^2 - .... ϕ_pB^p) (1-B)^dy_t = c+ (1+\theta_1B + \theta_2B^2 + .... + \theta_qB^q)e_t$$
+$(ϕ)B = (1 - ϕ_1B - ϕ_2B^2 - .... ϕ_pB^p) $ is the pth order polynomial in B.
+
+$(\theta)B = (1 - \theta_1B - \theta_2B^2 - .... \theta_pB^p) $ is the qth order polynomial in B.
+
+The stationarity condition for the model requires the complex root of $(ϕ)B$ to be outside the unit circle and hence inverse root to be inside the unit circle.
+
+The invertibility condition for the model requires the complex root of $(\theta)B$ to be outside the unit circle and hence inverse root to be inside the unit circle.
+
+We can check that as
+```{r}
+autoplot(fit_2)
+```
+
+The inverse roots are inside the unit circle. If roots are near the unit circle or outside of it then the forecasts won't be stable.
+
+
 
 
 
