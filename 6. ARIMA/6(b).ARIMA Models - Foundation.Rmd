@@ -270,7 +270,15 @@ autoplot(fit_2)
 
 The inverse roots are inside the unit circle. If roots are near the unit circle or outside of it then the forecasts won't be stable.
 
-
-
-
-
+#### Forecasts from ARIMA
+Now we will see how ARIMA produce forecasts. We will consider the model that we have built above ARIMA(3,1,1).
+The equation for this model can be written as 
+$$(1 - ϕ_1B - ϕ_2B^2 - ϕ_3B^3) (1-B)y_t = (1+\theta_1B )e_t$$
+The value of these parameters is in the output above. The above equation can be expanded as 
+$$[1 - (1 + ϕ_1)B +(ϕ_1 + ϕ_2)B^2 + (ϕ_2 - ϕ_3)B^3 + ϕ_3B^4]y_t = (1 + \theta_1B)e_t$$ 
+and replacing the backshift operator
+$$y_t - (1 + ϕ_1)y_{t-1} +(ϕ_1 + ϕ_2)y_{t-2}+ (ϕ_2 - ϕ_3)y_{t-3} + ϕ_3y_{t-4} = e_t + \theta_1e_{t-1}$$ 
+$$y_t = (1 + ϕ_1)y_{t-1} - (ϕ_1 + ϕ_2)y_{t-2} - (ϕ_2 - ϕ_3)y_{t-3} - ϕ_3y_{t-4} + e_t + \theta_1e_{t-1}$$
+Now repalce t with T+1. $e_{T+1}$ will be zero and $e_T$ will be replaced with last observed residual.
+$$y_{T+1|T} = (1 + ϕ_1)y_{T} - (ϕ_1 + ϕ_2)y_{T-1} - (ϕ_2 - ϕ_3)y_{T-2} - ϕ_3y_{T-3}  + \theta_1e_T$$
+A forecast for T+2, and so on can be obtained in a similar way.
