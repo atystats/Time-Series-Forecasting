@@ -1,5 +1,5 @@
 ---
-title: "6(b).ARIMA Models - Foundation"
+title: "6(b).ARIMA Models - Foundation and Non Seasonal ARIMA"
 author: "Ankit"
 date: "3/7/2019"
 output: html_document
