@@ -1,0 +1,100 @@
+---
+title: "6(c). Seasonal ARIMA"
+author: "Ankit"
+date: "3/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ARIMA can also be used for seasonal data. We write it as $ARIMA(p,d,q) (P,D,Q)_m$. where m is the number of observations per year. The seasonal part of the model consists of terms that are similar to non seasonal component, but involves backshifts of the seasonal period.
+
+An $ARIMA(1,1,1)(1,1,1)_4$ model without a constant can be written as 
+$$(1-ϕB)(1-ΦB^4)(1-B)(1-B^4) y_t = (1+ \theta_1B)(1+Θ_1B^4)e_t
+$$
+
+#### Finding the seasonal part
+The seasonal part can also be seen in ACF/PACF plot.
+
+For $ARIMA(0,0,1)(0,0,1)_4$ model:
+
+1. a spike at lag 12 in the ACF but no other significant spike.
+
+2. exponential decay in the seasonal lag in the PACF plot.
+
+For $ARIMA(1,0,0)(1,0,0)_4$ model:
+
+1. a spike at lag 12 in the PACF but no other significant spike.
+
+2. exponential decay in the seasonal lag in the ACF plot.
+
+Example: European Quarterly Retail Trade
+```{r}
+library(fpp2)
+autoplot(euretail) + ylab("Retail Index") + xlab("Year") +
+  ggtitle("Quarterly Retail Trade Index")
+```
+
+The data are clearly non-stationary with some seasonality present as well. So we will first take a seasonal difference and will see if that makes data stationary.
+```{r}
+euretail %>% diff(lag = 4) %>% ggtsdisplay()
+```
+
+The data still looks non stationary. So we will take a first difference as well.
+
+```{r}
+euretail %>%  diff(lag = 4) %>% diff(lag = 1) %>% ggtsdisplay()
+```
+
+Now we will try to find a appropriate ARIMA model based on ACF/PACF plot.
+A significant spike at lag 1 shows non-seasonal MA(1). A significant spike at lag 4 suggest a seasonal MA(1). Hence, initially we select $ARIMA(0,1,1)(0,1,1)_4$ model, indicating a seasonal and first difference and non-seasonal and seasonal MA(1).
+
+```{r}
+euretail %>% 
+  Arima(order = c(0,1,1), seasonal = c(0,1,1)) %>% 
+  residuals() %>% ggtsdisplay()
+```
+
+Now both the ACF and PACF plots are showing a significant spike at lag 2 that means a non seasonal terms is need to be included. Now we will try $ARIMA(0,1,2)(0,1,1)_4$
+
+```{r}
+fit_1 = Arima(euretail, order = c(0,1,2), seasonal = c(0,1,1))
+summary(fit_1)
+```
+
+```{r}
+fit_1 %>% residuals() %>% ggtsdisplay()
+```
+
+This time we are getting a spike at 3. Now let's try $ARIMA(0,1,3)(0,1,1)_4$
+
+```{r}
+fit_2 = Arima(euretail, order = c(0,1,3), seasonal = c(0,1,1))
+summary(fit_2)
+```
+
+```{r}
+fit_2 %>% residuals() %>% ggtsdisplay()
+```
+
+This time the ACF/PACF looks much better, residuals also looks like white noise and also AICc has also improved.
+
+```{r}
+fit_2 %>% forecast(h = 12) %>% autoplot()
+```
+
+The forecast seems to follow the recent trend because of the double differencing.
+
+The large and rapidly increasing prediction intervals show that the retail trade index could start increasing or decreasing at any time — while the point forecasts trend downwards, the prediction intervals allow for the data to trend upwards during the forecast period.
+
+Now we can check if auto.arima function gives the same result or not.
+```{r}
+auto.arima(euretail, stepwise = FALSE)
+```
+It selects the same model.
+
+
+
+
