@@ -141,7 +141,16 @@ summary(fit_2)
 checkresiduals(fit_2)
 ```
 
-The residuals looks normally distributed but the ACF plot shows some spike.
+The residuals looks normally distributed but the ACF plot shows some spike. 
+Sometimes it is just not possible to find a model that passes all of the tests. One way to go in this situation is to test all the best models on out of time data and select the one with highest forecast accuracy.
 
+When models are compared using AICc values, it is important that all models have the same orders of differencing. However, when comparing models using a test set, it does not matter how the forecasts were produced — the comparisons are always valid.
 
-
+Forecasts from the $ARIMA(3,0,1)(0,1,2)_{12}$ model (which has the lowest RMSE value on the test set, and the best AICc value amongst models with only seasonal differencing.
+```{r}
+h02 %>% 
+  Arima(order = c(3,0,1), seasonal = c(0,1,2), lambda = 0) %>%
+  forecast() %>% 
+  autoplot() + 
+  ylab("H02 sales (million scripts)") + xlab("Year")
+```
