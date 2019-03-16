@@ -18,19 +18,19 @@ $$
 #### Finding the seasonal part
 The seasonal part can also be seen in ACF/PACF plot.
 
-For $ARIMA(0,0,1)(0,0,1)_4$ model:
+For $ARIMA(0,0,1)(0,0,1)_{12}$ model:
 
 1. a spike at lag 12 in the ACF but no other significant spike.
 
 2. exponential decay in the seasonal lag in the PACF plot.
 
-For $ARIMA(1,0,0)(1,0,0)_4$ model:
+For $ARIMA(1,0,0)(1,0,0)_{12}$ model:
 
 1. a spike at lag 12 in the PACF but no other significant spike.
 
 2. exponential decay in the seasonal lag in the ACF plot.
 
-Example: European Quarterly Retail Trade
+**Example: European Quarterly Retail Trade**
 ```{r}
 library(fpp2)
 autoplot(euretail) + ylab("Retail Index") + xlab("Year") +
@@ -95,6 +95,53 @@ auto.arima(euretail, stepwise = FALSE)
 ```
 It selects the same model.
 
+**Example : Corticosteroid drug sales in Australia**
+
+```{r}
+lh02 = log(h02)
+cbind("H02 sales (million scripts)" = h02,
+      "Log H02 sales" = lh02) %>% 
+  autoplot(facets = TRUE) + xlab("Year") + ylab("")
+```
+
+The original time series has small increase in the variance so we have taken log to stabilize it.
+The data is seasonal in nature and obviously non-stationary, so seasonal differencing will be used.
+
+```{r}
+lh02 %>% diff(lag = 12) %>% 
+  ggtsdisplay(xlab = "Year",
+              main = "Seasonally differenced H02 scripts")
+```
+
+The residuals are not stationary. PACF plot shows spike at lag 12 and 24 but ACF do not shows any significant lag at seasonal period. This suggest seasonal AR(2) model. PACF plots shows 3 significant spike and ACF do not suggest any simple model. We will start with non-seasonal AR(3). We have $ARIMA(3,0,0)(2,1,0)_{12}$.
+
+```{r}
+AICC = c()
+AICC[1] = Arima(h02, order = c(3,0,0), seasonal = c(2,1,0), lambda = 0)$aicc
+AICC[2] = Arima(h02, order = c(3,0,1), seasonal = c(2,1,0), lambda = 0)$aicc
+AICC[3] = Arima(h02, order = c(3,0,2), seasonal = c(2,1,0), lambda = 0)$aicc
+AICC[4] = Arima(h02, order = c(3,0,1), seasonal = c(1,1,0), lambda = 0)$aicc
+AICC[5] = Arima(h02, order = c(3,0,1), seasonal = c(0,1,2), lambda = 0)$aicc
+AICC[6] = Arima(h02, order = c(3,0,1), seasonal = c(1,1,1), lambda = 0)$aicc
+AICC[7] = Arima(h02, order = c(3,0,1), seasonal = c(0,1,1), lambda = 0)$aicc
+AICC
+```
+Of these models, the best is the $ARIMA(3,0,1)(0,1,2)_{12}$ model. 
+```{r}
+fit = Arima(h02, order = c(3,0,1), seasonal = c(0,1,2), lambda = 0)
+fit %>% checkresiduals()
+```
+
+We still some spike in the ACF plot and the model fails the Ljung-Box test. Now we try auto.arima function.
+```{r}
+fit_2 = auto.arima(h02, lambda = 0, stepwise = FALSE)
+summary(fit_2)
+```
+```{r}
+checkresiduals(fit_2)
+```
+
+The residuals looks normally distributed but the ACF plot shows some spike.
 
 
 
