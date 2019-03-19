@@ -1,0 +1,46 @@
+---
+title: "6(d). ARIMA vs ETS Models"
+author: "Ankit"
+date: "3/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The difference between ETS and ARIMA models that all the ETS models are non-stationary but some of the ARIMA models are stationary. 
+
+The ETS models with seasonality or non-damped trend or both have two unit roots (i.e., they need two levels of differencing to make them stationary). All other ETS models have one unit root (they need one level of differencing to make them stationary).
+
+While selecting the models between ARIMA and ETS, we cannot compare the models directly using information criteria because both are calculating the likelihood differenctly.
+
+One way to compare ARIMA and ETS model is time series cross-validation. 
+
+**Example :- Australian Air traffic data**
+```{r}
+library(fpp2)
+fets = function(x,h){
+  forecast(ets(x), h = h)
+}
+
+farima = function(x,h){
+  forecast(auto.arima(x), h = h)
+}
+
+air = window(ausair, start = 1990)
+
+#To compute the CV error
+e1 = tsCV(air, fets , h = 1)
+e2 = tsCV(air, farima , h = 1)
+mean(e1^2, na.rm = TRUE)
+mean(e2^2, na.rm = TRUE)
+```
+
+ETS model gives smaller error in this particular case. 
+
+```{r}
+air %>% ets() %>% forecast() %>% autoplot()
+```
+
+
