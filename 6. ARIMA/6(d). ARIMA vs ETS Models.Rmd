@@ -17,6 +17,7 @@ While selecting the models between ARIMA and ETS, we cannot compare the models d
 
 One way to compare ARIMA and ETS model is time series cross-validation. 
 
+**Non-Seasonal Data**
 **Example :- Australian Air traffic data**
 ```{r}
 library(fpp2)
@@ -41,6 +42,55 @@ ETS model gives smaller error in this particular case.
 
 ```{r}
 air %>% ets() %>% forecast() %>% autoplot()
+```
+
+**Seasonal Data**
+**Quarterly cement production data**
+```{r}
+cement = window(qcement, start = 1988)
+#Preparing trainng set for the model
+train = window(cement, end = c(2007,4))
+
+## Fitting ARIMA model on training data
+fit.arima = auto.arima(train)
+summary(fit.arima)
+```
+
+```{r}
+checkresiduals(fit.arima)
+```
+
+The ARIMA model seems to work well as the residuals looks like white noise.
+
+```{r}
+fit.ets = ets(train)
+summary(fit.ets)
+```
+
+```{r}
+checkresiduals(fit.ets)
+```
+
+This model also does well in capturing all the dynamics in the data, as the residuals similarly appear to be white noise.
+
+Comparing the 2 models
+```{r}
+a1 = fit.arima %>% forecast(h = 4*(2013 - 2007) + 1) %>% 
+  accuracy(qcement)
+a1[,c("RMSE","MAE","MAPE","MASE")]
+```
+
+```{r}
+a2 = fit.ets %>% forecast(h = 4*(2013 - 2007) + 1) %>% 
+  accuracy(qcement)
+a2[,c("RMSE","MAE","MAPE","MASE")]
+```
+
+Notice that the ARIMA model fits the training data slightly better than the ETS model, but that the ETS model provides more accurate forecasts on the test set.
+
+Forecast from ETS Model 
+```{r}
+cement %>% ets() %>% forecast(h=12) %>% autoplot()
 ```
 
 
