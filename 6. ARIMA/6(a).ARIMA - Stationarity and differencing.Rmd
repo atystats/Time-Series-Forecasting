@@ -113,3 +113,19 @@ For Seasonal differencing
 ```{r}
 nsdiffs(usmelec)
 ```
+
+**Exercise**
+
+**2. IBM Closing Stock Price**
+```{r}
+autoplot(ibmclose)
+ggAcf(ibmclose)
+ggPacf(ibmclose)
+```
+
+Autoplot of the series shows that the series is non-stationary as it wanders up and down over time.
+The ACF plot also decrease slowly over time suggest that the series is non-stationary.
+PACF plot shows a spike at lag 1 suggesting a first order differencing.
+
+**3. Finding Box-Cox and order of differencing **
+
