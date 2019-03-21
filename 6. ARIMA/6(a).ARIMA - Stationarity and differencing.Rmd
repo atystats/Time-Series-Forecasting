@@ -128,4 +128,121 @@ The ACF plot also decrease slowly over time suggest that the series is non-stati
 PACF plot shows a spike at lag 1 suggesting a first order differencing.
 
 **3. Finding Box-Cox and order of differencing **
+**Annual US net electricity generation**
+```{r}
+autoplot(usnetelec)
+```
 
+The data is alsmost linearly increasing. No transformation is required. It looks like only first order differencing is needed.
+```{r}
+ndiffs(usnetelec)
+```
+We can use KPSS test to check if differenced is stationary or not.
+```{r}
+usnetelec %>% diff() %>% ur.kpss() %>% summary()
+```
+The test statistic value is within the range. Hence the differenced data is stationary.
+
+**Quarterly US GDP**
+```{r}
+autoplot(usgdp)
+```
+
+The data looks slightly non-linear. We will see if Box Cox tranformation makes it more linear or not.
+```{r}
+autoplot(BoxCox(usgdp, lambda = BoxCox.lambda(usgdp))) + ylab("")
+```
+
+The data looks linearly increasing now. It looks like we just need first order differencing.
+```{r}
+ndiffs(BoxCox(usgdp, lambda = BoxCox.lambda(usgdp)))
+```
+```{r}
+BoxCox(usgdp, lambda = BoxCox.lambda(usgdp)) %>% diff() %>% autoplot()
+```
+
+The differenced series looks like white noise but the mean is not zero. An intercept will take care of that.
+```{r}
+BoxCox(usgdp, lambda = BoxCox.lambda(usgdp)) %>% diff() %>% ur.kpss() %>% summary()
+```
+The test statistic value is within the range. Hence the differenced data is stationary.
+
+**Monthly copper prices**
+```{r}
+autoplot(mcopper)
+```
+
+The data seems to have increasing variance for bigger price. We will use Box Cox transformation.
+```{r}
+mcopper %>% BoxCox(lambda = BoxCox.lambda(mcopper)) %>% autoplot()
+```
+
+```{r}
+mcopper %>% BoxCox(lambda = BoxCox.lambda(mcopper)) %>% diff() %>% autoplot()
+```
+
+The data looks like white noise. We can test it using KPSS test.
+
+```{r}
+mcopper %>% BoxCox(lambda = BoxCox.lambda(mcopper)) %>% diff() %>% ur.kpss() %>% summary()
+```
+The test statistic value is within the range. Hence the differenced data is stationary.
+
+**Monthly US domestic enplanements**
+```{r}
+autoplot(enplanements)
+```
+
+The data has an increasing variance. It also has seasonality present. We will first use Box Cox transformation to constrol variance.
+```{r}
+BoxCox(enplanements, lambda = BoxCox.lambda(enplanements)) %>% autoplot()
+```
+
+We will first take the seasonal difference and see if it makes series stationary or not.
+```{r}
+BoxCox(enplanements, lambda = BoxCox.lambda(enplanements)) %>%  diff(12) %>% autoplot()
+```
+
+The series do not look stationary. We will now check for first differencing.
+```{r}
+BoxCox(enplanements, lambda = BoxCox.lambda(enplanements)) %>%  diff(12) %>% ndiffs()
+```
+1st order differencing is required.
+
+```{r}
+BoxCox(enplanements, lambda = BoxCox.lambda(enplanements)) %>%  diff(12) %>% 
+  diff() %>% autoplot()
+```
+
+The series now looks stationary. 
+```{r}
+BoxCox(enplanements, lambda = BoxCox.lambda(enplanements)) %>%  diff(12) %>% 
+  diff() %>% ur.kpss() %>% summary()
+```
+The KPSS test also confirm that data is stationary.
+
+**Monthly Australian overseas vistors**
+```{r}
+autoplot(visitors)
+```
+
+The data is surely has an increasing variance. So we will use Box Cox transformation.
+```{r}
+BoxCox(visitors, lambda = BoxCox.lambda(visitors)) %>% autoplot()
+```
+
+We will first take the seasonal difference and see if it makes series stationary or not.
+```{r}
+BoxCox(visitors, lambda = BoxCox.lambda(visitors)) %>% diff(12) %>% autoplot()
+```
+
+The series do not look stationary. We will now check for first differencing.
+```{r}
+BoxCox(visitors, lambda = BoxCox.lambda(visitors)) %>% diff(12) %>% diff() %>% autoplot()
+```
+```{r}
+BoxCox(visitors, lambda = BoxCox.lambda(visitors)) %>% diff(12) %>% diff() %>% 
+  ur.kpss() %>% summary()
+```
+
+The series is now stationary.
