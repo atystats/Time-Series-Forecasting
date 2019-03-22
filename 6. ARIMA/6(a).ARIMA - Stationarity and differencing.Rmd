@@ -246,3 +246,36 @@ BoxCox(visitors, lambda = BoxCox.lambda(visitors)) %>% diff(12) %>% diff() %>%
 ```
 
 The series is now stationary.
+
+**5. Retail Data**
+```{r}
+retaildata = readxl::read_excel("/Users/atyagi/Desktop/Time Series Forecasting/Time-Series-Forecasting/Time_series_data/retail.xlsx",skip =1)
+myts = ts(retaildata[,"A3349873A"], start = c(1984,4), frequency = 12)
+autoplot(myts)
+```
+
+The data has an increasing variance so we need Box Cox transformation first.
+```{r}
+myts %>% BoxCox(lambda = BoxCox.lambda(myts)) %>% autoplot()
+```
+
+We will first take the seasonal difference and see if it makes series stationary or not.
+```{r}
+myts %>% BoxCox(lambda = BoxCox.lambda(myts)) %>% diff(12) %>% autoplot()
+```
+
+The data do not looks stationary. We will check if it needs a first order differencing.
+```{r}
+myts %>% BoxCox(lambda = BoxCox.lambda(myts)) %>% diff(12) %>% ndiffs()
+```
+
+```{r}
+myts %>% BoxCox(lambda = BoxCox.lambda(myts)) %>% diff(12) %>% diff() %>% autoplot()
+```
+
+Now the data looks more like white noise. We can run unit root test and confirm.
+```{r}
+myts %>% BoxCox(lambda = BoxCox.lambda(myts)) %>% diff(12) %>% diff() %>% 
+  ur.kpss() %>% summary()
+```
+The test statistic value is within range so data is stationary now.
