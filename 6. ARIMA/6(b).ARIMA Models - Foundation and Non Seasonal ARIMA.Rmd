@@ -293,5 +293,41 @@ for(i in 2:100)
 autoplot(y)
 ```
 
+We will see how the plot changes with ϕ.
+```{r}
+ar1generator = function(phi){
+  y = ts(numeric(100))
+  e = rnorm(100)
+  for(i in 2:100)
+    y[i] = phi*y[i-1] + e[i]
+  return(y)
+}
 
+autoplot(ar1generator(0.3), series = "0.3") +
+  autolayer(ar1generator(0.6), series = "0.6") +
+  autolayer(ar1generator(0.9), series = "0.9") +
+  ylab("AR(1) Models") +
+  guides(colour = guide_legend(title = "Phi1"))
+```
+
+As the value of phi increase, variation increases. This just represents that high value of phi represents that the models can take high adjustments. 
+
+Now we will generate data from MA(1) process.
+```{r}
+ma1_generator = function(theta){
+  y = ts(numeric(100))
+  e = rnorm(100)
+  for(i in 2:100)
+    y[i] = theta * e[i-1] + e[i]
+  return(y)
+}  
+autoplot(ma1_generator(0.3), series = "0.3") +
+  autolayer(ma1_generator(0.6), series = "0.6") +
+  autolayer(ma1_generator(0.9), series = "0.9") +
+  ylab("MA(1) Models") +
+  guides(colour = guide_legend(title = "theta1"))
+
+```
+
+The same conclusion as AR(1) model.
 
