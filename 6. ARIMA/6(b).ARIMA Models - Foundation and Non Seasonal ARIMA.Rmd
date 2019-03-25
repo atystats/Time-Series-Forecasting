@@ -282,3 +282,16 @@ $$y_t = (1 + ϕ_1)y_{t-1} - (ϕ_1 + ϕ_2)y_{t-2} - (ϕ_2 - ϕ_3)y_{t-3} - ϕ_3y_
 Now repalce t with T+1. $e_{T+1}$ will be zero and $e_T$ will be replaced with last observed residual.
 $$y_{T+1|T} = (1 + ϕ_1)y_{T} - (ϕ_1 + ϕ_2)y_{T-1} - (ϕ_2 - ϕ_3)y_{T-2} - ϕ_3y_{T-3}  + \theta_1e_T$$
 A forecast for T+2, and so on can be obtained in a similar way.
+
+#### Excercise
+To generate data from an AR(1) model with $ϕ_1 = 0.6$ and variance as 1. The process starts with $y_1$ = 0.
+```{r}
+y = ts(numeric(100))
+e = rnorm(100)
+for(i in 2:100)
+  y[i] = 0.6*y[i-1] + e[i]
+autoplot(y)
+```
+
+
+
