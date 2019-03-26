@@ -284,6 +284,7 @@ $$y_{T+1|T} = (1 + ϕ_1)y_{T} - (ϕ_1 + ϕ_2)y_{T-1} - (ϕ_2 - ϕ_3)y_{T-2} - ϕ
 A forecast for T+2, and so on can be obtained in a similar way.
 
 #### Excercise
+**1. Generating Models**
 To generate data from an AR(1) model with $ϕ_1 = 0.6$ and variance as 1. The process starts with $y_1$ = 0.
 ```{r}
 y = ts(numeric(100))
@@ -357,4 +358,21 @@ autoplot(arima_101)
 ```
 
 Data from an AR(2) model increased with oscillation. They are non-staionary data. But data from an ARMA(1, 1) model were stationary.
+
+**Fitting ARIMA Model**
+We will explore wmurders (No. of women murders data)
+```{r}
+autoplot(wmurders) +
+  ylab("No. of murders") + ggtitle("No. of women murders data")
+```
+
+The data shows no seasonality and no consistent trend, but the series is not stationary either. We can take a differencing and check if that makes it stationary.
+
+```{r}
+# wmurders %>% BoxCox(lambda = BoxCox.lambda(wmurders)) %>% diff() %>% ggtsdisplay()
+wmurders %>% diff() %>% ggtsdisplay()
+```
+
+
+
 
