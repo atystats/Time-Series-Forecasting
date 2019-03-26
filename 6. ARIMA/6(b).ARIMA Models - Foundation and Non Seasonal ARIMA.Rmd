@@ -330,4 +330,31 @@ autoplot(ma1_generator(0.3), series = "0.3") +
 ```
 
 The same conclusion as AR(1) model.
+Now we will generate data from ARIMA(1,0,1) with phi = 0.6 and theta = 0.6.
+```{r}
+arima_101 = ts(numeric(50))
+e = rnorm(50)
+for(i in 2:50)
+  arima_101[i] = 0.6*arima_101[i-1] + 0.6*e[i-1] + e[i]
+autoplot(arima_101)
+```
+
+Now we will generate data from AR(2) with $ϕ_1$ = -0.8 and $ϕ_2$ = 0.3.
+```{r}
+ar2_generator = ts(numeric(100))
+e = rnorm(100)
+for(i in 3:100)
+  ar2_generator[i] = -0.8 * ar2_generator[i-1] + 0.3 * ar2_generator[i-2] + e[i]
+autoplot(ar2_generator)
+```
+
+```{r}
+autoplot(arima_101, series = "ARMA(1, 1)") +
+  autolayer(ar2_generator, series = "AR(2)") +
+  ylab("y") +
+  guides(colour = guide_legend(title = "Models"))
+autoplot(arima_101)
+```
+
+Data from an AR(2) model increased with oscillation. They are non-staionary data. But data from an ARMA(1, 1) model were stationary.
 
