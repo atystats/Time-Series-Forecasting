@@ -373,6 +373,18 @@ The data shows no seasonality and no consistent trend, but the series is not sta
 wmurders %>% diff() %>% ggtsdisplay()
 ```
 
+The data still do not look stationary. It shows some increasing variance with time. We can use ndiff function to find out the right differencing
+```{r}
+ndiffs(wmurders)
+```
+This shows that data need 2 differencing.
+```{r}
+autoplot(diff(wmurders, differences = 2))
+```
 
+```{r}
+library(urca)
+wmurders %>% diff(differences = 2) %>% ur.kpss() %>% summary()
+```
 
-
+2nd differencing makes the data stationary.
