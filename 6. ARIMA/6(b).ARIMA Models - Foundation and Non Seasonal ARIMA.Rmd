@@ -359,7 +359,8 @@ autoplot(arima_101)
 
 Data from an AR(2) model increased with oscillation. They are non-staionary data. But data from an ARMA(1, 1) model were stationary.
 
-**Fitting ARIMA Model**
+**7. Fitting ARIMA Model**
+
 We will explore wmurders (No. of women murders data)
 ```{r}
 autoplot(wmurders) +
@@ -379,7 +380,7 @@ ndiffs(wmurders)
 ```
 This shows that data need 2 differencing.
 ```{r}
-autoplot(diff(wmurders, differences = 2))
+wmurders %>% diff(differences = 2) %>% ggtsdisplay(main = "")
 ```
 
 ```{r}
@@ -387,4 +388,57 @@ library(urca)
 wmurders %>% diff(differences = 2) %>% ur.kpss() %>% summary()
 ```
 
-2nd differencing makes the data stationary.
+2nd differencing makes the data stationary. Now, PACF plot shows sigificant spike at lag 1. ACF plot also shows spikes at lag 1 and 2. We can start with ARIMA(1,2,0) or ARIMA(0,2,2) or we can try both onw by one and see if it makes the ACF and PACF plots more reasonable.
+
+Now, as we are using 2nd order differencing, we should avoid using a constant in the model as it will yield quadratic trend, which might create problems while forecasting.
+
+We can write ARIMA(1,2,0) as 
+$$(1 - ϕ_1B) (1-B)^2y_t = e_t$$
+
+```{r}
+wmurders_arima_120 = Arima(wmurders, order = c(1,2,0))
+summary(wmurders_arima_120)
+```
+We can also try ARIMA(0,2,2) model.
+```{r}
+wmurders_arima_022 = Arima(wmurders, order = c(0,2,2))
+summary(wmurders_arima_022)
+```
+
+ARIMA(0,2,2) gives smaller AICc.
+Now we will look at the residuals
+```{r}
+checkresiduals(wmurders_arima_022)
+Pacf(residuals(wmurders_arima_022))
+```
+
+The residuals shows mean as 0 but variance is not looking constant. ACF plot looks good. Also, PAcf plot do not show any spike either.
+
+Let's see if auto.arima arrives at the same model.
+```{r}
+auto.arima(wmurders, seasonal = FALSE, stepwise = FALSE, approximation = FALSE)
+```
+
+ARIMA(0,2,3) gives better AICc and BIC. This means that there can be more than 1 model that satisfies the condtions that we target on residuals.
+
+Now we will calculate the forecast manually.
+Formula
+$$y_t = 2y_{t-1} - y_{t-2} + e_t + \theta_1 e_{t-1} + \theta_2 e_{t-2}$$
+
+```{r}
+years = length(wmurders)
+e = residuals(wmurders_arima_022)
+fc1 = 2*wmurders[years] - wmurders[years-1] + -1.0181 * e[years] + 0.1470 * e[years-1]
+fc2 = 2*fc1 - wmurders[years] + 0.1470 * e[years]
+fc3 = 2*fc2 - fc1
+c(fc1, fc2, fc3)
+```
+
+```{r}
+forecast(wmurders_arima_022, h = 3)
+```
+Manually calculated forecasts are very similar to manually calculated forecast.
+```{r}
+forecast(wmurders_arima_022, h = 3) %>% autoplot()
+```
+
