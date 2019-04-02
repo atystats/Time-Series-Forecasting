@@ -12,8 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ARIMA can also be used for seasonal data. We write it as $ARIMA(p,d,q) (P,D,Q)_m$. where m is the number of observations per year. The seasonal part of the model consists of terms that are similar to non seasonal component, but involves backshifts of the seasonal period.
 
 An $ARIMA(1,1,1)(1,1,1)_4$ model without a constant can be written as 
-$$(1-ϕB)(1-ΦB^4)(1-B)(1-B^4) y_t = (1+ \theta_1B)(1+Θ_1B^4)e_t
-$$
+$$(1-ϕB)(1-ΦB^4)(1-B)(1-B^4) y_t = (1+ \theta_1B)(1+Θ_1B^4)e_t$$
 
 #### Finding the seasonal part
 The seasonal part can also be seen in ACF/PACF plot.
@@ -154,3 +153,13 @@ h02 %>%
   autoplot() + 
   ylab("H02 sales (million scripts)") + xlab("Year")
 ```
+
+### Excercise
+Quarterly number of international tourists to Australia
+```{r}
+autoplot(austourists) + xlab("Years")
+```
+
+The data is seasonal in nature and also there is a strong increasing trend in the data.
+
+
