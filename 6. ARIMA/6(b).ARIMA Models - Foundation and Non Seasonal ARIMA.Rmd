@@ -409,7 +409,7 @@ ARIMA(0,2,2) gives smaller AICc.
 Now we will look at the residuals
 ```{r}
 checkresiduals(wmurders_arima_022)
-Pacf(residuals(wmurders_arima_022))
+ggPacf(residuals(wmurders_arima_022))
 ```
 
 The residuals shows mean as 0 but variance is not looking constant. ACF plot looks good. Also, PAcf plot do not show any spike either.
@@ -512,3 +512,89 @@ autoplot(forecast(austa.arima_021 , h = 10))
 ```
 
 The rate of increase in forecasts is very high. PI is being larger for the farther future forecast.
+
+**ARIMA and ETS Comparison**
+
+US GDP dataset
+```{r}
+autoplot(usgdp) + xlab("Year")
+```
+
+The data do not looks linear. We can use a BoxCox transformation and see if that makes it linear.
+```{r}
+autoplot(BoxCox(usgdp, lambda = BoxCox.lambda(usgdp))) 
+```
+
+The transformation makes the data linear. We will now use auto.arima to select a model.
+```{r}
+lambda_usgdp = BoxCox.lambda(usgdp)
+usgdp_arima = auto.arima(usgdp, lambda = lambda_usgdp)
+summary(usgdp_arima)
+```
+
+Let's check the residuals.
+
+```{r}
+checkresiduals(usgdp_arima)
+```
+
+We can look at ACF and PACF plot that will give us some idea how we can experiment with the paramters choosen.
+
+```{r}
+ggtsdisplay(diff(BoxCox(usgdp, lambda = lambda_usgdp)))
+```
+
+ACF plot shows 2 significant spikes and PACF shows one. We can experiment with the ARIMA(1,1,0) or ARIMA(0,1,2).
+
+```{r}
+usgdp_arima110 = Arima(usgdp, lambda = lambda_usgdp, order = c(1,1,0), include.drift = TRUE)
+summary(usgdp_arima110)
+checkresiduals(usgdp_arima110)
+```
+
+ACF plot still shows a spike at lag 2. Let's see the ARIMA(0,1,2)
+```{r}
+usgdp_arima012 = Arima(usgdp, lambda = lambda_usgdp, order = c(0,1,2), include.drift = TRUE)
+summary(usgdp_arima012)
+checkresiduals(usgdp_arima012)
+ggPacf(residuals(usgdp_arima012))
+```
+
+The ARIMA(0,1,2) models also gives good enough results and we do not see any significant spike in ACF and PACF plots. There is a spike at lag 12 but that is difficult to explain as the data is quarterly. The RMSE is slightly higher but AICc and BIC are slightly smaller. 
+
+```{r}
+usgdp_ets = ets(usgdp)
+summary(usgdp_ets)
+```
+
+```{r}
+autoplot(usgdp) +
+  autolayer(forecast(usgdp_arima012, h = 10), PI = FALSE, series = "ARIMA") +
+  autolayer(forecast(usgdp_ets, h = 10), PI = FALSE, series = "ETS") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+The foreasts coming from ETS seems more likely. We cannot compare ARIMA and ETS model using information value. They can be compared using cross validation method.
+
+```{r}
+fets = function(x,h){
+  forecast(ets(x), h = h)
+}
+
+farima = function(x,h){
+  forecast(auto.arima(x), h = h)
+}
+```
+
+
+```{r}
+#To compute the CV error
+e1 = tsCV(usgdp, fets , h = 1)
+e2 = tsCV(usgdp, farima , h = 1)
+mean(e1^2, na.rm = TRUE)
+```
+```{r}
+mean(e2^2, na.rm = TRUE)
+```
+
+ARIMA model gives smaller cross validation error.
