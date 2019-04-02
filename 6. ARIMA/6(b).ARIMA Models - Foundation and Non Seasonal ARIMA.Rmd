@@ -442,3 +442,73 @@ Manually calculated forecasts are very similar to manually calculated forecast.
 forecast(wmurders_arima_022, h = 3) %>% autoplot()
 ```
 
+**8. Fitting an ARIMA Model**
+
+We will compare the effect of adding drift in the model.
+Total international visitors to Australia (in millions)
+```{r}
+autoplot(austa) + 
+  xlab("Year") + ylab("No. of visitors") +
+  ggtitle("Total international visitors to Australia")
+```
+
+We will use auto.arima function to find the appropriate model.
+```{r}
+austa.arima = auto.arima(austa)
+summary(austa.arima)
+autoplot(forecast(austa.arima, h = 10))
+```
+
+ARIMA(0,1,1) with a constant. Let's see if the residuals looks like white noise.
+```{r}
+checkresiduals(austa.arima)
+```
+
+The residuals looks like white noise.
+We can fit a simpler model with no drift anc compare the results with the above model.
+```{r}
+austa.arima_011 = Arima(austa, order= c(0,1,1))
+autoplot(forecast(austa.arima_011 , h = 10))
+```
+
+We can see that a drift model obviously makes sense as there is a strong trend component in the model.
+
+Let's remove the MA part as well and compare
+```{r}
+austa.arima_010 = Arima(austa, order= c(0,1,0))
+autoplot(forecast(austa.arima_010 , h = 10))
+```
+
+The result from the last model is like naive forecasts. The forecast from the model with MA part are little higher as it is adjusting for the last forecasting as well.
+The prediction interval from the 2nd model is higher that is probably because we are using one more parameter.
+
+```{r}
+austa.arima_213 = Arima(austa, order= c(2,1,3), include.drift = TRUE)
+autoplot(forecast(austa.arima_213 , h = 10))
+```
+
+Now, in the above model as we have 2 AR and MA part. The constant will result in cubic trend.
+The forecasts are increasing but the rate of increase is getting smaller with time.
+
+Forecasts from an ARIMA(0,0,1) model with a constant.
+```{r}
+austa.arima_001 = Arima(austa, order= c(0,0,1), include.constant = TRUE)
+autoplot(forecast(austa.arima_001 , h = 10))
+```
+
+The forecasts are fastly decreased to the mean of the data history. This happened at with increasing forecast horizon we make error terms zero.
+
+```{r}
+austa.arima_000 = Arima(austa, order= c(0,0,0), include.constant = TRUE)
+autoplot(forecast(austa.arima_000 , h = 10))
+```
+
+If we remove the MA part as well. The forecasts will simply be the mean of the time series.
+
+Forecasts from an ARIMA(0,2,1) model with no constant
+```{r}
+austa.arima_021 = Arima(austa, order= c(0,2,1), include.constant = TRUE)
+autoplot(forecast(austa.arima_021 , h = 10))
+```
+
+The rate of increase in forecasts is very high. PI is being larger for the farther future forecast.
