@@ -155,7 +155,7 @@ h02 %>%
 ```
 
 ### Excercise
-Quarterly number of international tourists to Australia
+10. Quarterly number of international tourists to Australia
 ```{r}
 cbind("No. of tourists" = austourists,
       "No. of tourists(log)" = BoxCox(austourists, lambda = BoxCox.lambda(austourists))) %>%
@@ -200,3 +200,47 @@ auto.arima(austourists, stepwise = FALSE)
 
 Auto.arima also selects the same model. 
 
+**Fitting seasonal ARIMA**
+11. Total net generation of electricity (in billion kilowatt hours)
+```{r}
+autoplot(usmelec, series = "Data") +
+  autolayer(ma(usmelec, order = 12, centre = TRUE), series = "2-12 MA") +
+  xlab("Year") + ggtitle("Total net generation of electricity")
+```
+
+There is a increasing trend till year around 2008 and then no increasing trend is visible.
+The data has increasing variance so we will do some BoxCox transformation.
+```{r}
+usmelec_lambda = BoxCox.lambda(usmelec)
+autoplot(BoxCox(usmelec, lambda = usmelec_lambda))
+```
+
+The data is stationary so we will take one seasonal difference.
+```{r}
+usmelec %>% BoxCox(lambda = usmelec_lambda) %>% diff(lag = 12) %>% ggtsdisplay()
+```
+
+The data do not looks stationary still. We can take first order difference and check again
+```{r}
+usmelec %>% BoxCox(lambda = usmelec_lambda) %>% diff(lag = 12) %>% 
+  diff(lag = 1) %>% 
+  ggtsdisplay()
+```
+
+The data now looks pretty much stationary except there are some peaks peaks and troughs.
+
+ACF plot shows significant spike at lag 12 and no spike at any multiple of that. PACF shows slow decline at seasonal frequency. This suggest seasonal $ARIMA(0,1,1)_12$.
+
+Both ACF and PACF plot shows spike at lag 1 and 2. We can select non-seasonal ARIMA(0,1,2).
+```{r}
+usmelec_arima1 = Arima(usmelec, order = c(0,1,2), seasonal = c(0,1,1), 
+                       lambda = usmelec_lambda)
+summary(usmelec_arima1)
+ggtsdisplay(residuals(usmelec_arima1))
+```
+
+```{r}
+auto.arima(usmelec, lambda = usmelec_lambda, stepwise = FALSE)
+```
+
+The auto.arima gives a slightly better results.
