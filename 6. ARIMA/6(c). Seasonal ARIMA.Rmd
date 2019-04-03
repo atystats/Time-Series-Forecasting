@@ -157,9 +157,46 @@ h02 %>%
 ### Excercise
 Quarterly number of international tourists to Australia
 ```{r}
-autoplot(austourists) + xlab("Years")
+cbind("No. of tourists" = austourists,
+      "No. of tourists(log)" = BoxCox(austourists, lambda = BoxCox.lambda(austourists))) %>%
+  autoplot(facets = TRUE) + xlab("Years")
 ```
 
 The data is seasonal in nature and also there is a strong increasing trend in the data.
 
+```{r}
+ggAcf(austourists)
+ggPacf(austourists)
+```
+
+ACF plot shows a curve in each season. This is happening because of seasonality in the data. The PACF plot shows significant spike at lag 4 and 8 also some significant spike till lag 5.
+
+```{r}
+austourists %>% diff(lag = 4) %>% ggtsdisplay()
+```
+
+The data shows spike at lag 4 in both the plots and no other significant spike at seasonal lags. This suggests a Seasonal $ARIMA(1,1,0)_4$. Also, there is spike at lag1 in both the plot, that suggest a Non-seasonal AR(1).
+The model we are fitting is $ARIMA(1,0,0)(1,1,0)_4$.
+
+We can fit this model and check residuals.
+```{r}
+aust_arima = Arima(austourists, order = c(1,0,0), seasonal = c(1,1,0))
+checkresiduals(aust_arima)
+ggPacf(residuals(aust_arima))
+```
+
+The ACF and PACF plot still shows some spike at lag 1. We can check if including drift gives a better result.
+
+```{r}
+aust_arima_drift = Arima(austourists, order = c(1,0,0), seasonal = c(1,1,0), include.drift = TRUE)
+checkresiduals(aust_arima_drift)
+```
+
+This looks much better.
+Let's see what model is selected from auto.arima.
+```{r}
+auto.arima(austourists, stepwise = FALSE)
+```
+
+Auto.arima also selects the same model. 
 
