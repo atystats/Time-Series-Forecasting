@@ -30,3 +30,45 @@ The challange with these type of models is that we cannot least square kind of m
 
 Alternatively, we will use maximum likelihood estimation.
 
+An important consideration when estimating a regression with ARMA errors is that all of the variables in the model must first be stationary. Thus, we first have to check that $y_t$ and all of the predictors $(x_{1,t},…, x_{k,t})$ appear to be stationary. If we estimate the model when any of these are non-stationary, the estimated coefficients will not be consistent estimates.  One exception to this is the case where non-stationary variables are co-integrated. If there exists a linear combination of the non-stationary $y_t$ and the predictors that is stationary, then the estimated coefficients will be consistent.
+
+So, we first difference the non-stationary variables. Now, we often need to maintain the form of relationship in between $y_t$ and the predictors, and consequently it is common to difference all the variables if any of them needs differencing. The resulting model is called a "model in differences". 
+
+If all of the variables in the model are stationary, then we only need to consider ARMA errors for the residuals. It is easy to see that a regression model with ARIMA errors is equivalent to a regression model in differences with ARMA errors.
+
+The model above with differencing can be written as
+$$y_{t}^{'} = \beta_0 + \beta_1 x_{1,t}^{'} +.....+ \beta_kx_{k,t}^{'} + \eta_{t}^{'}$$
+where $y_{t}^{'} =  y_{t} - y_{t-1}$, $x_{t,i}^{'} =  x_{t,i} - x_{t-1,i}$ and $\eta_{t}^{'} = \eta_t - \eta_{t-1}$.
+
+**Example**
+US Personal Consumption and Income
+```{r}
+library(fpp2)
+autoplot(uschange[,1:2], facets = TRUE) +
+  xlab("Year") + ylab("") +
+  ggtitle("Quarterly changes in US consumption
+    and personal income")
+```
+
+The data looks stationary so there is no need for differencing. We can use auto.arima to fit a dynamic regression model.
+```{r}
+fit = auto.arima(uschange[,"Consumption"],
+                 xreg = uschange[,"Income"])
+summary(fit)
+```
+The fitted model is 
+$$y_t = 0.599 + 0.2028x_t + \eta_t$$
+$$\eta_t = 0.6922\eta_{t-1} + e_t - 0.5758 e_{t-1} + 0.198 e_{t-2}$$
+
+Now we will plot both ARIMA and regression errors
+```{r}
+cbind("Regression Errors" = residuals(fit, type = "regression"),
+      "ARIMA Errors" = residuals(fit, type = "innovation")) %>% 
+  autoplot(facets = TRUE)
+```
+
+It is the ARIMA errors that should resemble a white noise series.
+```{r}
+checkresiduals(fit)
+```
+
