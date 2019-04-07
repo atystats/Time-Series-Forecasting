@@ -1,0 +1,32 @@
+---
+title: "7(a). Dynamic Regression - Intro"
+author: "Ankit"
+date: "4/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ARIMA Models or state space models allows for including information from past observations of a series, but do not allow inclusion of other informations like effect of hoildays, promo activities, competitior activity etc. 
+
+On the other hand, Time series models can take care of these other relevant information but do not include past observations as input.
+
+**Dynamic Regression** is an approach to extend ARIMA models in order to allow other information to be included in the models.
+We can write a dynamic regression model as 
+$$y_t = \beta_0 + \beta_1 x_{1,t} +.....+ \beta_kx_{k,t} + \eta_t$$
+where $\eta_t$ follows an ARIMA model instead of being a white noise.
+
+The challange with these type of models is that we cannot least square kind of methods where we minimise error term (in this case $\eta_t$) to find the estimates. This happens because of several reasons.
+
+1. The estimated coefficients are no longer the best estimates as some information has been ignored, which we have considered in the ARIMA model.
+
+2. As the $\eta_t$ do not follow white noise distribution but an ARIMA Model, all the t-test will be insignificant.
+
+3. AICc or BIC cannot be used in most of the cases to choose the best model.
+
+4. p-values may not be valid in most of the cases. Usually the p-value gets smaller.
+
+Alternatively, we will use maximum likelihood estimation.
+
