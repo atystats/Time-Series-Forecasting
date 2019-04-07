@@ -72,3 +72,47 @@ It is the ARIMA errors that should resemble a white noise series.
 checkresiduals(fit)
 ```
 
+To forecast using a regression model with ARIMA errors, we need to forecast the regression part of the model and the ARIMA part of the model, and combine the results.
+
+In above example we are assuming that future percentage change in income is simply the average of the income in last 40 years.
+```{r}
+fcast = forecast(fit, xreg = rep(mean(uschange[,"Income"]),8))
+autoplot(fcast) + xlab("Year") +
+  ylab("Percentage change")
+```
+
+The prediction that are calculated do not include the uncertainity associated with the income variable itself. We assume that we know the value of predictors prior forecasting.
+
+**Example 2. Forecasting electricity demand**
+```{r}
+qplot(Temperature, Demand, data = as.data.frame(elecdaily)) +
+  xlab("Temperature") + ylab("Demand")
+```
+
+It is clear that the relationship between demand and temperature is non-linear. More electricity is used on cold days due to heating and hot days due to air conditioning.
+We have a indicator that mark as workday. It takes value 1 on workday and 0 otherwise.
+```{r}
+autoplot(elecdaily[,c(1,3)], facets = TRUE, )
+```
+
+
+The plot shows that we need a non-linear and dynamic model. We saw a U-shape in the above graph, so we will a quadratic regression model.
+
+```{r}
+xreg = cbind(MaxTemp = elecdaily[,"Temperature"],
+      MaxTempsq = elecdaily[,"Temperature"]^2,
+      Workday = elecdaily[,"WorkDay"])
+fit = auto.arima(elecdaily[,"Demand"], xreg = xreg)
+summary(fit)
+checkresiduals(fit)
+```
+
+The model some significant correlation, Also, we can see some ouliers in the residuals which will effect the prediction intervals.
+
+Using the estimated model we forecast 14 days ahead starting from Thursday 1 January 2015 (a non-work-day being a public holiday for New Years Day). We assume temperature for the next 14 days to a constant 26 degrees.
+```{r}
+fcast = forecast(fit, xreg = cbind(rep(26,14),
+                                   rep(26^2,14),
+                                   c(0,1,0,0,1,1,1,1,1,0,0,1,1,1)))
+autoplot(fcast) + ylab("Electricity demand (GW)")
+```
