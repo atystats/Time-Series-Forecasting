@@ -58,7 +58,7 @@ summary(fit)
 ```
 The fitted model is 
 $$y_t = 0.599 + 0.2028x_t + \eta_t$$
-$$\eta_t = 0.6922\eta_{t-1} + e_t - 0.5758 e_{t-1} + 0.198 e_{t-2}$$
+$$\eta_t = 0.6922\eta_{t-1} + \epsilon_t - 0.5758 \epsilon_{t-1} + 0.198 \epsilon_{t-2}$$
 
 Now we will plot both ARIMA and regression errors
 ```{r}
@@ -116,3 +116,59 @@ fcast = forecast(fit, xreg = cbind(rep(26,14),
                                    c(0,1,0,0,1,1,1,1,1,0,0,1,1,1)))
 autoplot(fcast) + ylab("Electricity demand (GW)")
 ```
+
+#### Trends in Dynamic Regression
+There are 2 kind of trends. A deterministic trend can be modelled as
+$$y_t = \beta_0 + \beta_1t + \eta_t,$$
+where $\eta_t$ is an ARMA process. A stochastic process is 
+$$y_t = \beta_0 + \beta_1t + \eta_t,$$
+where $\eta_t$ is an ARIMA process with d = 1. We can take differences both the sides so that 
+$$y_{t}^{'} = \beta_1 + \eta_{t}^{'}$$
+where $\eta_{t}^{'}$ is an ARIMA process. In other words,
+$$y_t = y_{t-1} + \beta_1 + \eta_{t}^{'}$$
+
+**Example - International visitors to Australia**
+```{r}
+autoplot(austa) + xlab("Year") +
+  ylab("millions of people") +
+  ggtitle("Total annual international visitors in Australia")
+```
+
+We will first fit deterministic trend to the data.
+```{r}
+trend = seq_along(austa) 
+(fit1 = auto.arima(austa, d = 0, xreg = trend))
+```
+
+The model selected is 
+$$y_t = 0.4156 + 0.171t + \eta_t$$
+$$\eta_t = 1.1127 \eta_{t-1} - 0.3805 \eta_{t-2} + \epsilon_t $$
+and $\epsilon_t$ follows NID(0, 0.2979).
+The estimated growth in visitor numbers is 0.17 million people per year.
+
+Now, we will fit stochastic trend to the data.
+```{r}
+(fit2 = auto.arima(austa, d = 1))
+```
+The model selected is 
+$$y_t -y_{t-1} = 0.1735 + \eta_{t}^{'}$$
+$$y_t = y_0 + 0.1735t + \eta_t$$
+$$\eta_t = \eta_{t-1} + 0.3006 \epsilon_{t-1} + \epsilon_t$$
+and $\epsilon_t$ follows NID(0, 0.03376).
+In this case, the estimated growth in visitor numbers is also 0.17 million people per year. But the prediction interval from both the models won't be similar.
+```{r}
+fc1 = forecast(fit1,
+               xreg = cbind(trend = length(austa) + 1:10))
+
+fc2 = forecast(fit2, h = 10)
+autoplot(austa) +
+  autolayer(fc2, "Stochastic trend") +
+  autolayer(fc1, "Deterministic trend") +
+  ggtitle("Forecasts from trend models") +
+  xlab("Year") + ylab("Visitors to Australia (millions)") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+In deterministic trends the slope of the trend is not going to change over time. On the other hand, stochastic trends can change, and the estimated growth is only assumed to be the average growth over the historical period, not necessarily the rate of growth that will be observed into the future. 
+
+It is safer to forecast with stochastic trends, especially for longer forecast horizons, as the prediction intervals allow for greater uncertainty in future growth.
