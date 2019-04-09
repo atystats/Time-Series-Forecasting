@@ -50,3 +50,60 @@ gridExtra::grid.arrange(
 ```
 
 As we can see, increasing the value of K, we are able to capture more wiggly pattern as well. K = 5 is giving us the best results. So, we are using smaller value of k. If we use K = 11, that would be equivalent to creating 11 dummy variables.
+
+#### Lagged Predictors
+Some we need to include lagged values of a variable simple because these variables do not have an instant effect but their effect can be seen after certain period of time. For eg. increase in marketing spend might impact sales for coming months than the current month.
+
+Now how many lagged values we need to use for a predictor can be decide using AICc.
+
+**Example**
+Impact of TV advertising on insurance quotations.
+```{r}
+autoplot(insurance, facets = TRUE) +
+  xlab("Year") + ylab("") +
+  ggtitle("Insurance advertising and quotations")
+```
+
+In this model, we will include the expenditure for up to 4 months.
+
+```{r}
+Advert = cbind(
+  AdLag0 = insurance[,"TV.advert"],
+  AdLag1 = lag(insurance[,"TV.advert"],-1),
+  AdLag2 = lag(insurance[,"TV.advert"],-2),
+  AdLag3 = lag(insurance[,"TV.advert"],-3)) %>% 
+  head(NROW(insurance))
+
+# We need to exclude the first 3 rows to make a fair comparison
+fit1 = auto.arima(insurance[4:40,1], xreg = Advert[4:40,1],
+                  stationary = TRUE)
+fit2 = auto.arima(insurance[4:40,1], xreg = Advert[4:40,1:2],
+                  stationary = TRUE)
+fit3 = auto.arima(insurance[4:40,1], xreg = Advert[4:40,1:3],
+                  stationary = TRUE)
+fit4 = auto.arima(insurance[4:40,1], xreg = Advert[4:40,1:4],
+                  stationary = TRUE)
+c(fit1[["aicc"]],fit2[["aicc"]],fit3[["aicc"]],fit4[["aicc"]])
+```
+
+The best model is with 2 lag predictors. Now we can use all the data to fit this model.
+```{r}
+(fit = auto.arima(insurance[,1], xreg = Advert[,1:2],
+                  stationary = TRUE))
+```
+
+The model that is selected is AR(3) model. This model can be written as
+$$y_t = 2.0393 + 1.2564 x_t + 0.1625 x_{t-1} + \eta_t$$
+$$\eta_t = 1.4117 \eta_{t-1} - 0.9317 \eta_{t-2} + 0.3591 \eta_{t-3} + \epsilon_t$$
+and $\epsilon_t$ is a white noise process.
+
+Forecast from the above model
+```{r}
+fc = forecast(fit, h = 20,
+              xreg = cbind(AdLag0 = rep(8,20),
+                           Adlag1 = c(Advert[40,1],rep(8,19))))
+autoplot(fc) + xlab("Years") +
+  ylab("Quotes") +
+  ggtitle("Forecast quotes with future advertising set to 8")
+```
+
