@@ -1,0 +1,52 @@
+---
+title: "7(b). Dynamic harmonic Regression"
+author: "Ankit"
+date: "4/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+When there are long sesonal periods, a regression with fourier terms can be used as ARIMA and ETS models are designed for shorter periods. Also, for example for daily level data , it does not make much sense to compare what happened today to what happened same day last year and there is no constraint that the seasonal pattern is smooth.
+
+So for such time series, we prefer a harmonic regression approach where the seasonal pattern is modelled using Fourier terms with short-term time series dynamics handled by an ARMA error. The disadvantage is that we assume seasonality is fixed which might not be true especially for long time series.
+
+There are some advantages of this approach other than it allows any length of seasonality.
+
+1. For data more than one seasonality, Fourier terms of different frequencies can be included.
+
+2. the smoothness of the seasonal patterns can be controlled with K, the seasonal pattern is smoother for smaller values of K.
+
+3. the short term dynamics can be handled easily with a simple ARMA error.
+
+**Example**
+Australian eating out expenditure
+The data is avaliable on a monthly level.
+```{r}
+library(fpp2)
+autoplot(auscafe) + xlab("Year") +
+  ylab("Eating out expenditure in billions")
+```
+
+The data seasonal in nature and the seasonality is increasing with the level of the series. We might have to take a log of the series.
+Now we will explain these seasonal variation using Fourier terms, with varying the value of K.
+```{r}
+cafe = window(auscafe, start = 2004)
+plots = list()
+for (i in 1:6) {
+  fit = auto.arima(cafe, xreg = fourier(cafe, K = i),
+                   seasonal = FALSE, lambda = 0)
+  plots[[i]] = autoplot(forecast(fit, 
+                                 xreg = fourier(cafe, K = i, h = 24))) +
+    xlab(paste("K=",i,"   AICC=",round(fit[["aicc"]],2))) +
+    ylab("") + ylim(1.5,4.7)
+}
+
+gridExtra::grid.arrange(
+  plots[[1]],plots[[2]],plots[[3]],
+  plots[[4]],plots[[5]],plots[[6]], nrow = 2)
+```
+
+As we can see, increasing the value of K, we are able to capture more wiggly pattern as well. K = 5 is giving us the best results. So, we are using smaller value of k. If we use K = 11, that would be equivalent to creating 11 dummy variables.
