@@ -172,3 +172,66 @@ autoplot(austa) +
 In deterministic trends the slope of the trend is not going to change over time. On the other hand, stochastic trends can change, and the estimated growth is only assumed to be the average growth over the historical period, not necessarily the rate of growth that will be observed into the future. 
 
 It is safer to forecast with stochastic trends, especially for longer forecast horizons, as the prediction intervals allow for greater uncertainty in future growth.
+
+**Excercise**
+**1. Monthly Sales and advertising expenditure for an automotive parts company.**
+```{r}
+autoplot(advert, facets = TRUE) +
+  xlab("Year") + ylab("Sales and advertising expenditure")
+```
+
+We will first fit a linear regression model. 
+```{r}
+fit_linear = tslm(sales ~ advert, data = advert)
+summary(fit_linear)
+```
+The fitted model is $y_t = 78.73426 + 0.53426 * x_t + \epsilon_t$.
+```{r}
+checkresiduals(fit_linear)
+```
+
+The residuals shows significant correlation in lag 1 and lag 2.
+```{r}
+fit_arima = Arima(advert[,"sales"], xreg = advert[,"advert"],
+      order = c(0,0,0))
+checkresiduals(fit_arima)
+```
+
+Now we will fit model using auto.arima function.
+```{r}
+(fit_arima2 = auto.arima(advert[,"sales"], xreg = advert[,"advert"]))
+checkresiduals(fit_arima2)
+```
+
+The selected error structure for the model is ARIMA(0,1,0). The residuals do not show any significant correlation. Also, the residuals looks like white noise.
+```{r}
+fc = forecast(fit_arima2, h = 6, xreg = rep(10,6))
+autoplot(fc)
+```
+
+**Exercise 2. Level of Lake Huron**
+```{r}
+autoplot(huron) 
+```
+
+We will fit a piecewise regression with a knot at 1920 as there is a change in slope of trend in the time series.
+```{r}
+trend = time(huron)
+trend_knot = ts(pmax(0, trend - 1920), start = time(huron)[1])
+(fit.pw = auto.arima(huron, xreg = cbind(trend, trend_knot)))
+```
+
+Regression with AR(2) errors.
+```{r}
+autoplot(huron) +
+  autolayer(fit.pw$fitted)
+```
+
+Forecast from the model.
+```{r}
+t.fc = trend[length(trend)] + seq(30)
+t.knot.fc = trend_knot[length(trend)] + seq(30)
+fc = forecast(fit.pw, xreg = cbind(t.fc, t.knot.fc), h = 30)
+autoplot(fc)
+```
+
