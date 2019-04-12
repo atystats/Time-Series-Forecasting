@@ -235,3 +235,29 @@ fc = forecast(fit.pw, xreg = cbind(t.fc, t.knot.fc), h = 30)
 autoplot(fc)
 ```
 
+**Exercise 3. Total accommodation at hotel, motel and guest house**
+```{r}
+autoplot(motel, facets = TRUE)
+```
+
+```{r}
+avg.cost = motel[,"Takings"] / motel[,"Roomnights"]
+autoplot(avg.cost) + 
+  xlab("Year") + ylab("Average Accomodation Cost")
+```
+
+The average accomodation cost is increasing at first and then stabilize after year 1990.
+```{r}
+(cpi_fit = auto.arima(cpimel,lambda = 0))
+```
+
+We have a ARIMA(0,2,1) model.
+```{r}
+autoplot(cpimel) +
+  autolayer(cpi_fit$fitted,series = "Fitted Value")
+```
+
+Both the variables shows increase in varaition with time and a transformation might make it more linear.
+
+
+
