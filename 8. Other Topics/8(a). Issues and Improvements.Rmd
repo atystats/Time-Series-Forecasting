@@ -1,0 +1,39 @@
+---
+title: "Issues and Improvement"
+author: "Ankit"
+date: "4/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Higher frequency time series like daily level, hourly level time series can exhibit very complicated seasonal patterns. For eg. daily level data can have weekly seasonality and annual seasonality as well.
+
+Also for weekly data the frequency is in decimals 52.179 (approx). Most of the methods only allows for integer seasonality and also only one level of seasonality. We may not always wants to include all the levels of seasonality but sometimes it is very important to handle different seasonality in the data.
+
+**Example**
+Calls data shows the number of retail banking call arrivals per 5-minute interval between 7:00am and 9:05pm each weekday over a 33 week period. Now this data has 2 levels of seasonality that we will explore.
+```{r}
+library(fpp2)
+p1 = autoplot(calls) +
+  ylab("Call volume") + xlab("Weeks") +
+  scale_x_continuous(breaks = seq(1,33, by = 2))
+p2 = autoplot(window(calls, end = 4)) +
+  ylab("Call volume") + xlab("Weeks") +
+  scale_x_continuous(minor_breaks = seq(1,4, by = 0.2))
+gridExtra::grid.arrange(p1,p2)
+```
+
+The above 2 graphs shows that there are 2 seasonality present in the data. We have daily seasonal pattern as can be seen in the 2nd graph, the mondays usually have higher no. of calls.
+
+Another way to look at multiple seasonality is by decomposing the time series. We can use mstl() function for that.
+```{r}
+calls %>% mstl() %>%
+  autoplot(calls) + xlab("Years")
+```
+
+The above do not show any consistent trend. We have a daily seasonal data in the third panel and weekly seasonal pattern in the fourth panel. The scales of weekly seasonality has narrow range than daily seasonality.
+
+
