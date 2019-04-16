@@ -248,7 +248,7 @@ autoplot(avg.cost) +
 
 The average accomodation cost is increasing at first and then stabilize after year 1990.
 ```{r}
-(cpi_fit = auto.arima(cpimel,lambda = 0))
+(cpi_fit = auto.arima(motel[,"CPI"],lambda = 0))
 ```
 
 We have a ARIMA(0,2,1) model.
@@ -259,5 +259,117 @@ autoplot(cpimel) +
 
 Both the variables shows increase in varaition with time and a transformation might make it more linear.
 
+```{r}
+(fit.cost = auto.arima(avg.cost, xreg = cpi_fit$fitted, lambda = 0, approximation = FALSE))
+```
 
+Forecast for this model. We need to forecast for CPI for next 12 years.
+```{r}
+fc_cpi = forecast(cpi_fit, h = 12)
+fc_cost = forecast(fit.cost, xreg = fc_cpi$mean, h = 12)
+autoplot(fc_cost)
+```
 
+**Excercise 4 - US finished motor gasoline product supplied**
+```{r}
+autoplot(gasoline)
+```
+
+The data show increasing trend till 2007, then a slightly downward trend till 2012-13, then increasing again.
+```{r}
+t = time(gasoline)
+t.knot1 = 2007
+t.knot2 = 2013
+t.pw1 = ts(pmax(0,t - t.knot1), start = t[1], frequency = 365.25/7)
+t.pw2 = ts(pmax(0,t - t.knot2), start = t[1], frequency = 365.25/7)
+AICc <- Inf
+K_min.Aicc <- 0
+# use for-loop to find the harmonic regression model which yields least AICc. Maximum number of repetition is 26 times because the maximum number of pairs should be less than a half of the number of weeks in a year, 52.18.
+for(num in c(1:26)){
+  gasoline_tslm <- tslm(
+    gasoline ~ trend + t.pw1 + t.pw2 + fourier(
+      gasoline, K = num
+    )
+  )
+  AICc_value <- CV(gasoline_tslm)["AICc"]
+  
+  if(AICc > AICc_value){
+    AICc <- AICc_value
+  }else{
+    K_min.Aicc <- num
+    break 
+  }
+}
+K_min.Aicc
+```
+```{r}
+gasoline_tslm
+```
+
+```{r}
+gasoline_arima = auto.arima(gasoline, xreg = cbind(t = t,t.pw1 = t.pw1,t.pw2 = t.pw2, Fourier = fourier(gasoline, K = 11)))
+```
+```{r}
+gasoline_arima
+checkresiduals(gasoline_arima)
+```
+
+```{r}
+gasoline.from2000 <- window(gasoline, start = 2000)
+t.from2000 <- window(t, start = 2000)
+t.pw1.from2000 <- window(t.pw1, start = 2000)
+t.pw2.from2000 <- window(t.pw2, start = 2000)
+# find the number of Fourier pairs for new data. 
+AICc <- Inf
+K_min.Aicc <- 0
+for(num in c(1:26)){
+  gasoline.from2000_tslm <- tslm(
+    gasoline.from2000 ~ trend + t.pw1.from2000 + t.pw2.from2000 + fourier(
+      gasoline.from2000, K = num
+    )
+  )
+  AICc_value <- CV(gasoline.from2000_tslm)["AICc"]
+  
+  if(AICc > AICc_value){
+    AICc <- AICc_value
+  }else{
+    K_min.Aicc <- num
+    break 
+  }
+}
+K_min.Aicc
+# still 11 Fourier pairs were chosen.
+gasoline.from2000_tslm
+```
+
+```{r}
+xreg.from2000 <- cbind(
+  t = t.from2000, 
+  t.pw1 = t.pw1.from2000, 
+  t.pw2 = t.pw2.from2000,
+  Fourier = fourier(
+    gasoline.from2000, K = 11
+    )
+  )
+# It also takes some minutes to run.
+gasoline.from2000_autoarima <- auto.arima(
+  gasoline.from2000,
+  xreg = xreg.from2000
+)
+```
+```{r}
+gasoline.from2000_autoarima
+checkresiduals(gasoline.from2000_autoarima)
+```
+
+The residuals do not looks like white noise. We can probably add more autoregressive terms to control autocorrelation. Adding more parameters will compromise on the likelihood.
+```{r}
+gasoline.from2000_arima.6.0.1 <- Arima(
+  gasoline.from2000,
+  xreg = xreg.from2000,
+  order = c(6, 0, 1)
+)
+checkresiduals(gasoline.from2000_arima.6.0.1)
+```
+
+ACF plots looks much better. The residuals looks more normal but the residuals do not have constant variance.
