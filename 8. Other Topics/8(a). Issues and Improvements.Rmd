@@ -34,6 +34,25 @@ calls %>% mstl() %>%
   autoplot(calls) + xlab("Years")
 ```
 
-The above do not show any consistent trend. We have a daily seasonal data in the third panel and weekly seasonal pattern in the fourth panel. The scales of weekly seasonality has narrow range than daily seasonality.
+The above do not show any consistent trend. We have a daily seasonal data in the third panel and weekly seasonal pattern in the fourth panel. The scales of weekly seasonality has narrow range than daily seasonality. 
+We can use decomposition for forecasting as well.
+```{r}
+calls %>% stlf() %>%
+  autoplot() + xlab("Week")
+```
+
+Another way to deal with it is to use dynamic harmonic regression model. Since we have 2 types of seaonalities we have to add fourier terms to handle both the seasonalities. Our seasonal frequencies are 169 and 845, so we need to add $sin(\frac{2\pi kt}{169})$, $cos(\frac{2\pi kt}{169})$, $sin(\frac{2\pi kt}{845})$ and $cos(\frac{2\pi kt}{845})$, for k = 1,2,...
+```{r}
+fit <- auto.arima(calls, seasonal=FALSE, lambda=0,
+         xreg=fourier(calls, K=c(10,10)))
+fit %>%
+  forecast(xreg=fourier(calls, K=c(10,10), h=2*169)) %>%
+  autoplot(include=5*169) +
+    ylab("Call volume") + xlab("Weeks")
+```
+
+
+
+
 
 
