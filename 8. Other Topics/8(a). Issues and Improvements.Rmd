@@ -41,6 +41,8 @@ calls %>% stlf() %>%
   autoplot() + xlab("Week")
 ```
 
+**Dynamic Harmonic Regression Models**
+
 Another way to deal with it is to use dynamic harmonic regression model. Since we have 2 types of seaonalities we have to add fourier terms to handle both the seasonalities. Our seasonal frequencies are 169 and 845, so we need to add $sin(\frac{2\pi kt}{169})$, $cos(\frac{2\pi kt}{169})$, $sin(\frac{2\pi kt}{845})$ and $cos(\frac{2\pi kt}{845})$, for k = 1,2,...
 ```{r}
 fit <- auto.arima(calls, seasonal=FALSE, lambda=0,
@@ -51,8 +53,70 @@ fit %>%
     ylab("Call volume") + xlab("Weeks")
 ```
 
+This is a large model hence take a lot of time calculate. This particular model has 40 parameters. 4 ARIMA coefficients, 20 Fourier coefficients for frequency 169 and 16 for frequency 845.
 
+**TBATS Models**
 
+Another approach for this problem is to fit TBATS Models(Trigonometric seasonality, Box-Cox Transformation, ARIMA Errors, Trend and seasonlaity). This uses a combination of Fourier terms with an exponential state space model and Box-Cox transformation. This technique is different from dynamic harmonic regression in that seasonality is allowed to change over time.
 
+```{r}
+calls %>%
+  subset(start = length(calls) - 2000) %>%
+  tbats() -> fit2
+fc2 = forecast(fit2, h = 2*169)
+autoplot(fc2, include = 5*169) +
+  ylab("Call volume") + xlab("Weeks")
+```
+
+One drawback of tbats model is that they are slow to estimate if time series is long.
+Here the prediction intervals appear to be much too wide – something that seems to happen quite often with TBATS models unfortunately.
+
+Also, TBATS models do not allow for covariates but they can be allowed in dynamic harmonic regression model.
+```{r}
+autoplot(elecdemand[,c("Demand","Temperature")],
+    facet=TRUE) +
+  scale_x_continuous(minor_breaks=NULL,
+    breaks=2014+
+      cumsum(c(0,31,28,31,30,31,30,31,31,30,31,30))/365,
+    labels=month.abb) +
+  xlab("Time") + ylab("")
+```
+
+```{r}
+elecdemand %>%
+  as.data.frame() %>%
+  ggplot(aes(x=Temperature, y=Demand)) + geom_point() +
+    xlab("Temperature (degrees Celsius)") +
+    ylab("Demand (GW)")
+```
+
+Since the relationship is non-linear, we will fit a piecewise linear function with knot at 18 and harmonic regression term to allow for daily seasonality.
+
+```{r}
+cooling <- pmax(elecdemand[,"Temperature"], 18)
+fit <- auto.arima(elecdemand[,"Demand"],
+         xreg = cbind(fourier(elecdemand, c(10,10,0)),
+               heating=elecdemand[,"Temperature"],
+               cooling=cooling))
+```
+
+Forecast from the model.
+```{r}
+temps <- subset(elecdemand[,"Temperature"],
+          start=NROW(elecdemand)-2*48+1)
+fc <- forecast(fit,
+        xreg=cbind(fourier(temps, c(10,10,0)),
+          heating=temps, cooling=pmax(temps,18)))
+#> Warning in forecast.Arima(fit, xreg = cbind(fourier(temps,
+#> c(10, 10, 0)), : xreg contains different column names from
+#> the xreg used in training. Please check that the regressors
+#> are in the same order.
+autoplot(fc, include=14*48)
+```
+
+Although the short-term forecasts look reasonable, this is a crude model for a complicated process. The residuals demonstrate that there is a lot of information that has not been captured with this model.
+```{r}
+checkresiduals(fc)
+```
 
 
